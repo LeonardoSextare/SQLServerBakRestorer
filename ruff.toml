@@ -1,0 +1,20 @@
+line-length = 120
+unsafe-fixes = true
+
+exclude = []
+
+[lint]
+extend-select = ["ALL"]
+unfixable = ["ALL"]
+
+select = []
+ignore = ["D100", "D104", "CPY001", "TC001", "TC003"]
+fixable = ["I001"]
+
+
+[lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "ARG002", "INP001", "PLR2004"]
+"src/bakrestorer/desktop/**" = ["C901", "PLR0915"]
+
+[lint.pylint]
+max-args = 10
