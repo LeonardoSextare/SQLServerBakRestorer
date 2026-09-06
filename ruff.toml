@@ -13,6 +13,7 @@ fixable = ["I001"]
 
 
 [lint.per-file-ignores]
+"exceptions.py" = ["D107"]
 "tests/**" = ["S101", "S105", "S106", "ARG002", "D102", "D103", "INP001", "PLR2004"]
 "src/bakrestorer/desktop/**" = ["C901", "PLR0915"]
 
