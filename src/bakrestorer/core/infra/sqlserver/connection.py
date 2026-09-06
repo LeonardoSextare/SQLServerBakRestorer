@@ -25,7 +25,7 @@ class Conexao:
         """Identifica a instância sem revelar credencial.
 
         Returns:
-            O host, seguido da instância nomeada quando houver.
+            str: O host, seguido da instância nomeada quando houver.
 
         """
         return f"{self.host}\\{self.instancia}" if self.instancia else self.host

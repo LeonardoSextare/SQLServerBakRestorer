@@ -15,9 +15,7 @@ def carregar(caminho: Path) -> object:
     """Lê o valor que o arquivo guarda.
 
     Returns:
-        O valor gravado, do tipo que o json trouxer: objeto, lista, texto,
-        número, booleano ou None. Decidir qual formato serve pertence a quem
-        chama.
+        object: O valor gravado, do tipo que o json trouxer.
 
     Raises:
         ArquivoNaoEncontradoError: Se não há arquivo no caminho informado.

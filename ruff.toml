@@ -8,7 +8,7 @@ extend-select = ["ALL"]
 unfixable = ["ALL"]
 
 select = []
-ignore = ["D100", "D104", "CPY001", "TC001", "TC003"]
+ignore = ["D100", "D104", "CPY001", "FIX002", "TC001", "TC003", "TD002", "TD003"]
 fixable = ["I001"]
 
 

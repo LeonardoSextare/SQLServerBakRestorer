@@ -56,8 +56,7 @@ class ClienteSqlServer:
             conexoes: Instâncias a alcançar.
 
         Returns:
-            Cada conexão informada e se a sessão dela ficou aberta, sem a causa
-            da falha.
+            dict[Conexao, bool]: Cada conexão informada e se a sessão dela ficou aberta.
 
         """
         aberta: dict[Conexao, bool] = {}
@@ -80,14 +79,15 @@ class ClienteSqlServer:
     ) -> list[dict[str, object]]:
         """Roda um comando na instância.
 
+        Comando que não produz conjunto de resultados devolve lista vazia.
+
         Args:
             conexao: Instância alvo.
             comando: Comando a executar, com parâmetros nomeados.
             parametros: Valores dos parâmetros nomeados.
 
         Returns:
-            Uma linha por resultado, cada uma mapeando coluna a valor, ou lista
-            vazia quando o comando não produz conjunto de resultados.
+            list[dict[str, object]]: Uma linha por resultado, mapeando coluna a valor.
 
         Raises:
             InstanciaInacessivelError: Se a instância não respondeu.
@@ -156,7 +156,7 @@ class ClienteSqlServer:
             conexao: Instância a alcançar.
 
         Returns:
-            A sessão aberta.
+            pytds.Connection: A sessão aberta.
 
         Raises:
             InstanciaInacessivelError: Se a instância não respondeu.
@@ -175,7 +175,7 @@ class ClienteSqlServer:
             conexao: Instância a alcançar.
 
         Returns:
-            A sessão recém-aberta.
+            pytds.Connection: A sessão recém-aberta.
 
         Raises:
             InstanciaInacessivelError: Se a instância não respondeu.
