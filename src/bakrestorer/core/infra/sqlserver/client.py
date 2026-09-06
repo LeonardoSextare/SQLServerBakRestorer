@@ -10,6 +10,16 @@ from bakrestorer.core.infra.sqlserver.exceptions import (
     SqlServerError,
 )
 
+LOGIN_RECUSADO = frozenset(
+    {
+        18452,  # login de domínio não confiável
+        18456,  # login ou senha inválidos
+        18486,  # conta bloqueada
+        18487,  # senha expirada
+        18488,  # senha precisa ser trocada
+    },
+)
+
 
 class ClienteSqlServer:
     """Executa comandos em instâncias do SQL Server, mantendo uma sessão por instância.
@@ -174,7 +184,7 @@ class ClienteSqlServer:
         """
         try:
             return pytds.connect(
-                server=conexao.servidor,
+                dsn=conexao.servidor,
                 port=conexao.porta,
                 user=conexao.usuario,
                 password=conexao.senha,
@@ -183,7 +193,10 @@ class ClienteSqlServer:
                 autocommit=True,
                 login_timeout=self._login_timeout,
             )
-        except pytds.LoginError as falha:
-            raise CredenciaisInvalidasError(conexao.servidor, str(falha)) from falha
+        except pytds.DatabaseError as falha:
+            if falha.msg_no in LOGIN_RECUSADO:
+                raise CredenciaisInvalidasError(conexao.servidor, str(falha)) from falha
+
+            raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
         except (pytds.Error, OSError) as falha:
             raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
