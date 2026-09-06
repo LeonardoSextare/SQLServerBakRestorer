@@ -37,11 +37,11 @@ class Instancia(BaseModel):
 class Configuracao(BaseModel):
     """A configuração inteira do aplicativo.
 
-    Imutável: toda alteração produz uma cópia revalidada por `com_alteracoes`.
+    Imutável: toda alteração produz uma cópia revalidada por `alterada`.
     Todos os campos têm padrão, então arquivo ausente equivale a `Configuracao()`.
 
     Attributes:
-        versao_do_formato: Versão do formato do arquivo gravado.
+        versao_da_config: Versão do formato do arquivo gravado.
         instancia_padrao: Alias da instância que o aplicativo usa para ler os
             arquivos `.bak`.
         instancias: Instâncias do SQL Server configuradas.
