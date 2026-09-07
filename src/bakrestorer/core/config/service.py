@@ -12,7 +12,7 @@ from bakrestorer.core.config.models import Configuracao, Instancia
 from bakrestorer.core.infra import json_file
 
 
-class ServicoDeConfiguracao:
+class ConfigService:
     """Lê e altera a configuração do aplicativo.
 
     Não guarda estado: cada operação lê o arquivo, decide e grava. Assim nada
@@ -30,6 +30,16 @@ class ServicoDeConfiguracao:
 
         """
         self._caminho = caminho
+
+    @property
+    def caminho(self) -> Path:
+        """Diz onde a configuração é gravada.
+
+        Returns:
+            Path: O arquivo, que pode ainda não existir.
+
+        """
+        return self._caminho
 
     def carregar(self) -> Configuracao | None:
         """Lê a configuração gravada.

@@ -220,6 +220,19 @@ wheels = [
 ]
 
 [[package]]
+name = "fast-depends"
+version = "3.0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f8/6d/787a21ca8043a8fdb737cf28f645e94a46fc30b44a31de54573299156bad/fast_depends-3.0.8.tar.gz", hash = "sha256:896b16f79a512b6ea1df721b0aa1708a192a06f964be6597e01fcf5412559101", size = 18382, upload-time = "2026-03-02T19:54:28.649Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/1d/e4843e4eeb65f51447b8c22d200d12d8f94f27c97e77bb7162515cc8d61f/fast_depends-3.0.8-py3-none-any.whl", hash = "sha256:4c52c8a3907bca46d43e70e4364d6d016872d9a3aae4bc0c1c85e72e0a6a21c7", size = 25507, upload-time = "2026-03-02T19:54:27.594Z" },
+]
+
+[[package]]
 name = "flet"
 version = "0.86.5"
 source = { registry = "https://pypi.org/simple" }
@@ -640,6 +653,7 @@ name = "sqlserverbakrestorer"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "fast-depends" },
     { name = "flet" },
     { name = "pydantic" },
     { name = "python-tds" },
@@ -656,6 +670,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fast-depends", specifier = ">=3.0.8" },
     { name = "flet", specifier = ">=0.86.5" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "python-tds", specifier = ">=1.17.1" },
