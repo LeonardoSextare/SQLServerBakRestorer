@@ -10,16 +10,17 @@ class TestCarregar:
 
     def test_dado_arquivo_integro_com_acesso_negado_quando_carregar_entao_a_falha_nao_e_de_corrupcao(
         self,
-        tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        caminho = tmp_path / "config.json"
-        caminho.write_text('{"alias": "PROD"}', encoding="utf-8")
+        def existir(*_: object, **__: object) -> bool:
+            return True
 
         def negar_o_acesso(*_: object, **__: object) -> str:
             raise PermissionError
 
+        monkeypatch.setattr(Path, "is_file", existir)
         monkeypatch.setattr(Path, "read_text", negar_o_acesso)
+        caminho = Path("config.json")
 
         with pytest.raises(ArquivoNaoLegivelError) as falha:
             carregar(caminho)
