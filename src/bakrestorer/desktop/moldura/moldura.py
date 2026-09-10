@@ -4,10 +4,11 @@ import flet as ft
 
 from bakrestorer.desktop.moldura.componentes.barra_titulo import barra_titulo
 from bakrestorer.desktop.moldura.estado import EstadoApp, Tela
+from bakrestorer.desktop.telas.config.tela import tela_config
 
 TELAS: dict[Tela, Callable[[], ft.Control]] = {
     Tela.RESTAURACAO: lambda: ft.Text("Tela de restauração"),
-    Tela.CONFIGURACAO: lambda: ft.Text("Tela de configuração"),
+    Tela.CONFIGURACAO: tela_config,
 }
 
 
