@@ -30,7 +30,7 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["src/bakrestorer/core"]
+source = ["src/bakrestorer"]
 
 [tool.coverage.report]
 fail_under = 100

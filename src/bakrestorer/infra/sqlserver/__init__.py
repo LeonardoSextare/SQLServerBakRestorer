@@ -1,6 +1,6 @@
-from bakrestorer.core.infra.sqlserver.client import ClienteSqlServer
-from bakrestorer.core.infra.sqlserver.connection import Conexao
-from bakrestorer.core.infra.sqlserver.exceptions import (
+from bakrestorer.infra.sqlserver.client import ClienteSqlServer
+from bakrestorer.infra.sqlserver.connection import Conexao
+from bakrestorer.infra.sqlserver.exceptions import (
     ComandoRecusadoError,
     CredenciaisInvalidasError,
     InstanciaInacessivelError,

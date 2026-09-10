@@ -4,7 +4,7 @@ import pytest
 from docker.errors import DockerException
 from testcontainers.community.mssql import SqlServerContainer
 
-from bakrestorer.core.infra.sqlserver import ClienteSqlServer, Conexao
+from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
 
 VERSOES_SUPORTADAS = ("2017", "2019", "2022", "2025")
 

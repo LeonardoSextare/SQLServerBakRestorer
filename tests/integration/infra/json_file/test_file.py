@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from bakrestorer.core.exceptions import BakRestorerError
-from bakrestorer.core.infra.json_file import (
+from bakrestorer.infra.json_file import (
     ArquivoCorrompidoError,
     ArquivoJsonError,
     ArquivoNaoEncontradoError,

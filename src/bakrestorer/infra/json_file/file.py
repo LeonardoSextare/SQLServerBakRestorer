@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from bakrestorer.core.infra.json_file.exceptions import (
+from bakrestorer.infra.json_file.exceptions import (
     ArquivoCorrompidoError,
     ArquivoNaoEncontradoError,
     ArquivoNaoGravavelError,

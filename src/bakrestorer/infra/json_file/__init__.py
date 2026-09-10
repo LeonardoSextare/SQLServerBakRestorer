@@ -1,11 +1,11 @@
-from bakrestorer.core.infra.json_file.exceptions import (
+from bakrestorer.infra.json_file.exceptions import (
     ArquivoCorrompidoError,
     ArquivoJsonError,
     ArquivoNaoEncontradoError,
     ArquivoNaoGravavelError,
     ArquivoNaoLegivelError,
 )
-from bakrestorer.core.infra.json_file.file import carregar, salvar
+from bakrestorer.infra.json_file.file import carregar, salvar
 
 __all__ = [
     "ArquivoCorrompidoError",

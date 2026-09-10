@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import pytest
 
-from bakrestorer.core.infra.sqlserver import (
+from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
     ComandoRecusadoError,
     Conexao,

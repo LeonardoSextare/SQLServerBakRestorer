@@ -1,9 +1,9 @@
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 import pytds
 
-from bakrestorer.core.infra.sqlserver.connection import Conexao
-from bakrestorer.core.infra.sqlserver.exceptions import (
+from bakrestorer.infra.sqlserver.connection import Conexao
+from bakrestorer.infra.sqlserver.exceptions import (
     ComandoRecusadoError,
     CredenciaisInvalidasError,
     InstanciaInacessivelError,
@@ -113,21 +113,16 @@ class ClienteSqlServer:
         conexao: Conexao,
         comando: str,
         parametros: Mapping[str, object] | None,
-        ao_progredir: Callable[[float], None],
     ) -> None:
         """Roda um comando demorado relatando o quanto dele já passou.
 
-        O `execute` do `pytds` só retorna quando o comando termina, e as
-        mensagens do servidor ficam retidas até lá. O progresso virá de uma
-        segunda sessão consultando `sys.dm_exec_requests` para a sessão que
-        estiver executando.
+        Como esse relato chega a quem chamou ainda não foi decidido.
 
         Args:
             conexao: Instância a alcançar.
             comando: Comando a executar, com parâmetros nomeados na forma
                 `%(nome)s`.
             parametros: Valores dos parâmetros nomeados.
-            ao_progredir: Recebe o percentual já concluído, periodicamente.
 
         Raises:
             NotImplementedError: Sempre, enquanto não for escrito.

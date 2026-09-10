@@ -10,7 +10,7 @@ from bakrestorer.core.config import (
     InstanciaJaExisteError,
     InstanciaNaoEncontradaError,
 )
-from bakrestorer.core.infra.json_file import ArquivoCorrompidoError
+from bakrestorer.infra.json_file import ArquivoCorrompidoError
 from tests.conftest import FabricaDeInstancia
 
 

@@ -9,7 +9,7 @@ from bakrestorer.core.config.exceptions import (
     InstanciaNaoEncontradaError,
 )
 from bakrestorer.core.config.models import Configuracao, Instancia
-from bakrestorer.core.infra import json_file
+from bakrestorer.infra import json_file
 
 
 class ConfigService:
