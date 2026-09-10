@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from bakrestorer.core.exceptions import BakRestorerError
 from bakrestorer.infra.json_file import (
     ArquivoCorrompidoError,
     ArquivoJsonError,
@@ -192,9 +191,6 @@ class TestHierarquiaDeExcecoes:
         excecao: type[ArquivoJsonError],
     ) -> None:
         assert issubclass(excecao, ArquivoJsonError)
-
-    def test_dado_o_erro_raiz_do_pacote_entao_ele_pertence_a_raiz_da_aplicacao(self) -> None:
-        assert issubclass(ArquivoJsonError, BakRestorerError)
 
     def test_dado_um_erro_do_pacote_quando_convertido_em_texto_entao_ele_carrega_o_caminho(
         self,

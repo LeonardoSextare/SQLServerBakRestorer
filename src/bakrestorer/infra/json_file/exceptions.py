@@ -1,9 +1,7 @@
 from pathlib import Path
 
-from bakrestorer.core.exceptions import BakRestorerError
 
-
-class ArquivoJsonError(BakRestorerError):
+class ArquivoJsonError(Exception):
     """Falha ao ler ou gravar um arquivo json.
 
     Attributes:

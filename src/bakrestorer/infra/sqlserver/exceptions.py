@@ -1,7 +1,4 @@
-from bakrestorer.core.exceptions import BakRestorerError
-
-
-class SqlServerError(BakRestorerError):
+class SqlServerError(Exception):
     """Falha ao alcançar uma instância do SQL Server ou ao executar um comando nela.
 
     Attributes:
