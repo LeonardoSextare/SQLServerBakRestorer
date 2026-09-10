@@ -4,7 +4,7 @@ unsafe-fixes = true
 [lint]
 extend-select = ["ALL"]
 
-select = []
-ignore = []
-fixable = []
+select = ["I001"]
+ignore = ["D100", "CPY001", "D104", "TC003", "TD002", "TD003"]
+fixable = ["I001"]
 unfixable = ["ALL"]
