@@ -10,6 +10,9 @@ dependencies = [
     "ty>=0.0.80",
 ]
 
+[project.scripts]
+bakrestorer = "bakrestorer.desktop.main:run"
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",
@@ -33,6 +36,9 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["src/bakrestorer"]
+# O desktop fica fora da cobertura enquanto não tiver teste -- ver
+# .claude/tarefas/desktop-sem-teste-automatizado.md
+omit = ["src/bakrestorer/desktop/*"]
 
 [tool.coverage.report]
 fail_under = 100
