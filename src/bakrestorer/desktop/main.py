@@ -1,7 +1,7 @@
 import flet as ft
 
-from bakrestorer.desktop.estado import EstadoApp
-from bakrestorer.desktop.moldura import moldura
+from bakrestorer.desktop.moldura.estado import EstadoApp
+from bakrestorer.desktop.moldura.moldura import moldura
 
 
 async def main(pagina: ft.Page) -> None:

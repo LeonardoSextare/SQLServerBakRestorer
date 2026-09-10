@@ -2,8 +2,8 @@ from collections.abc import Callable
 
 import flet as ft
 
-from bakrestorer.desktop.componentes.barra_titulo import barra_titulo
-from bakrestorer.desktop.estado import EstadoApp, Tela
+from bakrestorer.desktop.moldura.componentes.barra_titulo import barra_titulo
+from bakrestorer.desktop.moldura.estado import EstadoApp, Tela
 
 TELAS: dict[Tela, Callable[[], ft.Control]] = {
     Tela.RESTAURACAO: lambda: ft.Text("Tela de restauração"),
