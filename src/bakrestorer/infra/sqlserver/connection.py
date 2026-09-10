@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+from pydantic import BaseModel, ConfigDict, Field
 
 
-@dataclass(frozen=True)
-class Conexao:
+class Conexao(BaseModel):
     """Onde alcançar uma instância do SQL Server e com quais credenciais.
+
+    Imutável e comparada por valor, o que a deixa servir de chave de dicionário:
+    duas conexões com os mesmos campos são a mesma chave.
 
     Attributes:
         host: Máquina que hospeda a instância.
@@ -14,7 +16,9 @@ class Conexao:
 
     """
 
-    host: str
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    host: str = Field(min_length=1)
     instancia: str | None = None
     porta: int | None = None
     usuario: str | None = None

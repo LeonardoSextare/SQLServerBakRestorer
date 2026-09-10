@@ -1,5 +1,3 @@
-from dataclasses import replace
-
 import pytest
 
 from bakrestorer.infra.sqlserver import (
@@ -101,7 +99,10 @@ class TestExecutar:
         instancia_sql_server: Conexao,
     ) -> None:
         with pytest.raises(CredenciaisInvalidasError) as falha:
-            cliente_sql_server.executar(replace(instancia_sql_server, senha="errada"), "SELECT 1")
+            cliente_sql_server.executar(
+                instancia_sql_server.model_copy(update={"senha": "errada"}),
+                "SELECT 1",
+            )
 
         assert falha.value.servidor == instancia_sql_server.servidor
 
