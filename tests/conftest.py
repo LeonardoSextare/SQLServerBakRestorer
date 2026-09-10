@@ -6,7 +6,7 @@ from bakrestorer.core.config import Instancia
 
 
 @pytest.fixture
-def nova_instancia() -> Callable[..., Instancia]:
+def criar_instancia() -> Callable[..., Instancia]:
     """Monta instâncias válidas, e é compartilhada porque `unit` e `integration` precisam dela."""
 
     def montar(alias: str = "PROD", **campos: object) -> Instancia:
