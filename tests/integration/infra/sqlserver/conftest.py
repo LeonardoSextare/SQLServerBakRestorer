@@ -1,10 +1,9 @@
 from collections.abc import Iterator
 
 import pytest
+from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
 from docker.errors import DockerException
 from testcontainers.community.mssql import SqlServerContainer
-
-from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
 
 VERSOES_SUPORTADAS = ("2017", "2019", "2022", "2025")
 

@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from bakrestorer.infra.json_file import ArquivoNaoLegivelError, carregar
 
 

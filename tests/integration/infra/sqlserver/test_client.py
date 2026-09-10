@@ -1,5 +1,4 @@
 import pytest
-
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
     ComandoRecusadoError,

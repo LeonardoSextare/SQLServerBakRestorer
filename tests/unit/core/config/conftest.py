@@ -1,7 +1,6 @@
 from collections.abc import Callable
 
 import pytest
-
 from bakrestorer.core.config import Configuracao, Instancia
 
 

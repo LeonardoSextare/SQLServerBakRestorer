@@ -6,6 +6,8 @@ dependencies = [
     "flet>=0.86.5",
     "pydantic>=2.13.5",
     "python-tds>=1.17.1",
+    "ruff>=0.16.6",
+    "ty>=0.0.80",
 ]
 
 [dependency-groups]

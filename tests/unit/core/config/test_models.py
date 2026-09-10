@@ -2,9 +2,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from bakrestorer.core.config import VERSAO_DA_CONFIG, Configuracao, Instancia
+from pydantic import ValidationError
 
 
 class TestInstancia:

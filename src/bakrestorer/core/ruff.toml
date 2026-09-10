@@ -5,6 +5,6 @@ unsafe-fixes = true
 extend-select = ["ALL"]
 
 select = []
-ignore = ["D100"]
+ignore = ["D100", "CPY001", "D104", "TC003", "TD002", "TD003"]
 fixable = []
 unfixable = ["ALL"]

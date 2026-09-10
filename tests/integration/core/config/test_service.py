@@ -2,7 +2,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
 from bakrestorer.core.config import (
     ConfigService,
     Configuracao,

@@ -5,6 +5,9 @@ unsafe-fixes = true
 extend-select = ["ALL"]
 
 select = []
-ignore = ["D100"]
+ignore = ["D100", "D104", "CPY001", "TC003", "TC001"]
 fixable = []
 unfixable = ["ALL"]
+
+[per-file-ignores]
+"exceptions.py" = ["D107"]
