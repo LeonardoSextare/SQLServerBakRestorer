@@ -1,0 +1,10 @@
+line-length = 120
+unsafe-fixes = true
+
+[lint]
+extend-select = ["ALL"]
+
+select = []
+ignore = []
+fixable = []
+unfixable = ["ALL"]
