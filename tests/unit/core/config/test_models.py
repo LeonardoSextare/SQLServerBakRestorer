@@ -1,10 +1,10 @@
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from bakrestorer.core.config import VERSAO_DA_CONFIG, Configuracao
-from tests.conftest import FabricaDeInstancia
+from bakrestorer.core.config import VERSAO_DA_CONFIG, Configuracao, Instancia
 
 
 class TestInstancia:
@@ -16,7 +16,7 @@ class TestInstancia:
     )
     def test_dado_um_campo_obrigatorio_em_branco_quando_construir_entao_a_instancia_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
         campo: str,
     ) -> None:
         with pytest.raises(ValidationError):
@@ -24,14 +24,14 @@ class TestInstancia:
 
     def test_dado_um_campo_desconhecido_quando_construir_entao_a_instancia_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         with pytest.raises(ValidationError):
             nova_instancia(porta=1433)
 
     def test_dada_uma_instancia_construida_quando_tentar_alterar_um_campo_entao_a_alteracao_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         instancia = nova_instancia()
 
@@ -40,7 +40,7 @@ class TestInstancia:
 
     def test_dado_que_as_pastas_nao_foram_informadas_quando_construir_entao_elas_ficam_nulas(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         instancia = nova_instancia()
 
@@ -48,7 +48,7 @@ class TestInstancia:
 
     def test_dada_uma_pasta_como_texto_quando_construir_entao_ela_vira_caminho(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         instancia = nova_instancia(pasta_dados=r"D:\dados")
 
@@ -67,21 +67,21 @@ class TestConfiguracao:
 
     def test_dado_o_mesmo_alias_em_duas_instancias_quando_construir_entao_a_configuracao_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         with pytest.raises(ValidationError):
             Configuracao(instancias=(nova_instancia("PROD"), nova_instancia("PROD")))
 
     def test_dado_um_padrao_que_nao_esta_nas_instancias_quando_construir_entao_a_configuracao_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         with pytest.raises(ValidationError):
             Configuracao(instancias=(nova_instancia("PROD"),), instancia_padrao="HOMOLOG")
 
     def test_dado_um_padrao_presente_nas_instancias_quando_construir_entao_a_configuracao_e_aceita(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         configuracao = Configuracao(instancias=(nova_instancia("PROD"),), instancia_padrao="PROD")
 
@@ -97,7 +97,7 @@ class TestObterInstancia:
 
     def test_dado_um_alias_configurado_quando_obter_entao_a_instancia_correspondente_volta(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         homolog = nova_instancia("HOMOLOG")
         configuracao = Configuracao(instancias=(nova_instancia("PROD"), homolog))
@@ -106,7 +106,7 @@ class TestObterInstancia:
 
     def test_dado_um_alias_desconhecido_quando_obter_entao_a_resposta_e_nula(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         configuracao = Configuracao(instancias=(nova_instancia("PROD"),))
 
@@ -118,7 +118,7 @@ class TestAlterada:
 
     def test_dado_um_campo_substituido_quando_alterar_entao_os_demais_permanecem(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         configuracao = Configuracao(instancias=(nova_instancia("PROD"),), instancia_padrao="PROD")
 
@@ -128,7 +128,7 @@ class TestAlterada:
 
     def test_dada_uma_configuracao_alterada_quando_ler_a_original_entao_ela_continua_intacta(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         configuracao = Configuracao(instancias=(nova_instancia("PROD"),), instancia_padrao="PROD")
 
@@ -138,7 +138,7 @@ class TestAlterada:
 
     def test_dada_uma_alteracao_que_quebra_uma_regra_quando_alterar_entao_a_copia_e_recusada(
         self,
-        nova_instancia: FabricaDeInstancia,
+        nova_instancia: Callable[..., Instancia],
     ) -> None:
         configuracao = Configuracao(instancias=(nova_instancia("PROD"),), instancia_padrao="PROD")
 
