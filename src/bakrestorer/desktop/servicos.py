@@ -5,7 +5,8 @@ from bakrestorer.core.config import ConfigService
 
 # TODO: Caminho fixo, só para desenvolver -- ver
 # .claude/tarefas/caminho-da-configuracao-hardcoded.md
-CAMINHO_DA_CONFIGURACAO = Path("config/config.json")
+RAIZ_DO_PROJETO = Path(__file__).resolve().parents[3]
+CAMINHO_DA_CONFIGURACAO = RAIZ_DO_PROJETO / "config" / "config.json"
 
 
 @cache

@@ -1,12 +1,15 @@
+from collections.abc import Callable
+
 import flet as ft
 
 from bakrestorer.desktop.telas.config.componentes.barra_lateral import barra_lateral
 from bakrestorer.desktop.telas.config.estado import EstadoConfig, Secao
+from bakrestorer.desktop.telas.config.secoes.sobre import secao_sobre
 
-CONTEUDO_PROVISORIO = {
-    Secao.GERAL: "Preferências do aplicativo",
-    Secao.INSTANCIAS: "Instâncias cadastradas",
-    Secao.SOBRE: "Versão, atualizações e onde ficam os arquivos",
+SECOES: dict[Secao, Callable[[], ft.Control]] = {
+    Secao.GERAL: lambda: ft.Text("Preferências do aplicativo"),
+    Secao.INSTANCIAS: lambda: ft.Text("Instâncias cadastradas"),
+    Secao.SOBRE: secao_sobre,
 }
 
 
@@ -18,7 +21,7 @@ def tela_config() -> ft.Control:
     precisa saber.
 
     Returns:
-        A linha com a barra lateral e a parte escolhida.
+        A linha com a barra lateral e a seção escolhida.
 
     Note:
         O estado nasce aqui, no `use_state`, para sobreviver aos redesenhos --
@@ -36,7 +39,7 @@ def tela_config() -> ft.Control:
         controls=[
             barra_lateral(estado),
             ft.Column(
-                controls=[ft.Text(CONTEUDO_PROVISORIO[estado.secao])],
+                controls=[SECOES[estado.secao]()],
                 spacing=8,
                 scroll=ft.ScrollMode.AUTO,
                 expand=True,
