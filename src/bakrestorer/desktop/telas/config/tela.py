@@ -4,10 +4,11 @@ import flet as ft
 
 from bakrestorer.desktop.telas.config.componentes.barra_lateral import barra_lateral
 from bakrestorer.desktop.telas.config.estado import EstadoConfig, Secao
+from bakrestorer.desktop.telas.config.secoes.geral import secao_geral
 from bakrestorer.desktop.telas.config.secoes.sobre import secao_sobre
 
 SECOES: dict[Secao, Callable[[], ft.Control]] = {
-    Secao.GERAL: lambda: ft.Text("Preferências do aplicativo"),
+    Secao.GERAL: secao_geral,
     Secao.INSTANCIAS: lambda: ft.Text("Instâncias cadastradas"),
     Secao.SOBRE: secao_sobre,
 }

@@ -18,7 +18,6 @@ async def main(pagina: ft.Page) -> None:
 
     """
     pagina.title = "SQLServerBackupRestorer"
-    pagina.theme_mode = ft.ThemeMode.SYSTEM
     pagina.padding = 3
     pagina.window.title_bar_hidden = True
     pagina.window.resizable = False
