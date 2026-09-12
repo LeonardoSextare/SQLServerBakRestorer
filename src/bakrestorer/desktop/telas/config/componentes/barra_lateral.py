@@ -24,6 +24,7 @@ class Destino:
 DESTINOS_DO_TOPO = (
     Destino(Secao.GERAL, ft.Icons.TUNE, "Geral"),
     Destino(Secao.INSTANCIAS, ft.Icons.COMPUTER_OUTLINED, "Instâncias"),
+    Destino(Secao.AUTOMACAO, ft.Icons.TERMINAL, "Automação"),
 )
 
 DESTINOS_DO_FIM = (Destino(Secao.SOBRE, ft.Icons.INFO_OUTLINE, "Sobre"),)

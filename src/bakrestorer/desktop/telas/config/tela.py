@@ -3,13 +3,16 @@ from collections.abc import Callable
 import flet as ft
 
 from bakrestorer.desktop.telas.config.componentes.barra_lateral import barra_lateral
-from bakrestorer.desktop.telas.config.estado import EstadoConfig, Secao
+from bakrestorer.desktop.telas.config.estado import CONTEXTO_DA_CONFIG, EstadoConfig, Secao
+from bakrestorer.desktop.telas.config.secoes.automacao import secao_automacao
 from bakrestorer.desktop.telas.config.secoes.geral import secao_geral
+from bakrestorer.desktop.telas.config.secoes.instancias import secao_instancias
 from bakrestorer.desktop.telas.config.secoes.sobre import secao_sobre
 
 SECOES: dict[Secao, Callable[[], ft.Control]] = {
     Secao.GERAL: secao_geral,
-    Secao.INSTANCIAS: lambda: ft.Text("Instâncias cadastradas"),
+    Secao.INSTANCIAS: secao_instancias,
+    Secao.AUTOMACAO: secao_automacao,
     Secao.SOBRE: secao_sobre,
 }
 
@@ -34,19 +37,22 @@ def tela_config() -> ft.Control:
         ambíguo.
 
     """
-    estado, _ = ft.use_state(EstadoConfig())
+    estado_config, _ = ft.use_state(EstadoConfig())
 
-    return ft.Row(
-        controls=[
-            barra_lateral(estado),
-            ft.Column(
-                controls=[SECOES[estado.secao]()],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
-                expand=True,
-            ),
-        ],
-        spacing=8,
-        vertical_alignment=ft.CrossAxisAlignment.STRETCH,
-        expand=True,
-    )
+    def quadro() -> ft.Control:
+        return ft.Row(
+            controls=[
+                barra_lateral(estado_config),
+                ft.Container(
+                    content=SECOES[estado_config.secao](),
+                    expand=True,
+                ),
+            ],
+            spacing=8,
+            vertical_alignment=ft.CrossAxisAlignment.STRETCH,
+            expand=True,
+        )
+
+    ft.use_effect(estado_config.carregar, [])
+
+    return CONTEXTO_DA_CONFIG(estado_config, quadro)
