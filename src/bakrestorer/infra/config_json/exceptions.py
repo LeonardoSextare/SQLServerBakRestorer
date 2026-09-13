@@ -1,8 +1,8 @@
 from pathlib import Path
 
 
-class ArquivoJsonError(Exception):
-    """Falha ao ler ou gravar um arquivo json.
+class ConfigJsonError(Exception):
+    """Falha ao ler ou gravar a configuração guardada em json.
 
     Attributes:
         caminho: Arquivo que a operação tentou alcançar.
@@ -20,11 +20,11 @@ class ArquivoJsonError(Exception):
         self.caminho = caminho
 
 
-class ArquivoNaoEncontradoError(ArquivoJsonError):
+class ArquivoNaoEncontradoError(ConfigJsonError):
     """Não há arquivo no caminho informado."""
 
 
-class ArquivoNaoLegivelError(ArquivoJsonError):
+class ArquivoNaoLegivelError(ConfigJsonError):
     """O arquivo existe, mas o sistema recusou a leitura.
 
     Note:
@@ -34,11 +34,11 @@ class ArquivoNaoLegivelError(ArquivoJsonError):
     """
 
 
-class ArquivoCorrompidoError(ArquivoJsonError):
+class ArquivoCorrompidoError(ConfigJsonError):
     """O arquivo foi lido, mas o que está gravado não é json em utf-8."""
 
 
-class ArquivoNaoGravavelError(ArquivoJsonError):
+class ArquivoNaoGravavelError(ConfigJsonError):
     """O arquivo não pôde ser gravado.
 
     Note:

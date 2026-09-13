@@ -1,13 +1,13 @@
 from pathlib import Path
 
 import pytest
-from bakrestorer.infra.json_file import ArquivoNaoLegivelError, carregar
+from bakrestorer.infra.config_json import ArquivoNaoLegivelError, ConfigJson
 
 
-class TestCarregar:
-    """Cobre `carregar`."""
+class TestLer:
+    """Cobre `ler`."""
 
-    def test_dado_arquivo_integro_com_acesso_negado_quando_carregar_entao_a_falha_nao_e_de_corrupcao(
+    def test_dado_arquivo_integro_com_acesso_negado_quando_ler_entao_a_falha_nao_e_de_corrupcao(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -22,6 +22,6 @@ class TestCarregar:
         caminho = Path("config.json")
 
         with pytest.raises(ArquivoNaoLegivelError) as falha:
-            carregar(caminho)
+            ConfigJson(caminho, "instancias").ler()
 
         assert falha.value.caminho == caminho

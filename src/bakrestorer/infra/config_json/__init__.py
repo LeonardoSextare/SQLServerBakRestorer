@@ -1,18 +1,17 @@
-from bakrestorer.infra.json_file.exceptions import (
+from bakrestorer.infra.config_json.config_json import ConfigJson
+from bakrestorer.infra.config_json.exceptions import (
     ArquivoCorrompidoError,
-    ArquivoJsonError,
     ArquivoNaoEncontradoError,
     ArquivoNaoGravavelError,
     ArquivoNaoLegivelError,
+    ConfigJsonError,
 )
-from bakrestorer.infra.json_file.file import carregar, salvar
 
 __all__ = [
     "ArquivoCorrompidoError",
-    "ArquivoJsonError",
     "ArquivoNaoEncontradoError",
     "ArquivoNaoGravavelError",
     "ArquivoNaoLegivelError",
-    "carregar",
-    "salvar",
+    "ConfigJson",
+    "ConfigJsonError",
 ]
