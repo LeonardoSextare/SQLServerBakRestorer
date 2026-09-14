@@ -2,7 +2,7 @@ from importlib.metadata import version
 
 import flet as ft
 
-from bakrestorer.desktop.servicos import config_service
+from bakrestorer.desktop.servicos import CAMINHO_DA_CONFIGURACAO
 
 
 @ft.component
@@ -90,7 +90,7 @@ def _cartao_de_detalhes() -> ft.Control:
         mouse.
 
     """
-    arquivo = config_service().caminho
+    arquivo = CAMINHO_DA_CONFIGURACAO
     estilo_de_link = ft.TextStyle(color=ft.Colors.PRIMARY, decoration=ft.TextDecoration.UNDERLINE)
     tabela = {
         "Aplicativo": ("SQLServerBackupRestorer", None),

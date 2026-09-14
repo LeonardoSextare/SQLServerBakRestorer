@@ -3,8 +3,8 @@ from enum import Enum
 
 import flet as ft
 
-from bakrestorer.core.config import Configuracao
-from bakrestorer.desktop.servicos import config_service
+from bakrestorer.desktop.servicos import instancias_service
+from bakrestorer.features.instancias import ConfigInstancias
 
 
 class Secao(Enum):
@@ -23,14 +23,14 @@ class EstadoConfig:
 
     Attributes:
         secao: Qual parte da configuração está aparecendo.
-        configuracao: O que está gravado em disco, ou None enquanto ainda não
-            foi lido -- e também quando não há arquivo, o que marca a primeira
-            execução.
+        cadastro: O que está gravado em disco, ou None enquanto a tela ainda
+            não leu. Cadastro sem nenhuma instância volta como uma lista vazia,
+            e não como None.
 
     """
 
     secao: Secao = Secao.GERAL
-    configuracao: Configuracao | None = None
+    cadastro: ConfigInstancias | None = None
 
     def mostrar(self, secao: Secao) -> None:
         """Passa a mostrar outra parte da configuração.
@@ -50,7 +50,7 @@ class EstadoConfig:
             durante o desenho faria a leitura acontecer a cada redesenho.
 
         """
-        self.configuracao = config_service().carregar()
+        self.cadastro = instancias_service().carregar()
 
 
 CONTEXTO_DA_CONFIG = ft.create_context(EstadoConfig())

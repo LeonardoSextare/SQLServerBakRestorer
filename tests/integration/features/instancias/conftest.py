@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from bakrestorer.core.config import ConfigService
+from bakrestorer.features.instancias import InstanciasService, criar_service
 
 
 @pytest.fixture
@@ -11,6 +11,6 @@ def caminho_da_config(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def config_service(caminho_da_config: Path) -> ConfigService:
+def servico_de_instancias(caminho_da_config: Path) -> InstanciasService:
     """Serviço sob teste, apontado para um arquivo que ainda não foi gravado."""
-    return ConfigService(caminho_da_config)
+    return criar_service(caminho_da_config)

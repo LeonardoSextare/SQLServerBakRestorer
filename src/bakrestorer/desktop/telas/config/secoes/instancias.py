@@ -24,7 +24,7 @@ def secao_instancias() -> ft.Control:
 
     """
     estado = ft.use_context(CONTEXTO_DA_CONFIG)
-    configuracao = estado.configuracao
+    cadastro = estado.cadastro
 
     cabecalho = ft.Container(
         content=ft.Row(
@@ -39,7 +39,7 @@ def secao_instancias() -> ft.Control:
         align=ft.Alignment.CENTER_LEFT,
     )
 
-    if configuracao is None or not configuracao.instancias:
+    if cadastro is None or not cadastro.itens:
         cartao_do_convite = ft.Container(
             content=ft.Card(
                 content=ft.Container(
@@ -75,14 +75,14 @@ def secao_instancias() -> ft.Control:
                 subtitle=ft.Text(f"{instancia.nome} · {instancia.usuario}", size=13, opacity=0.7),
                 trailing=(
                     ft.Icon(ft.Icons.STAR, size=18, color=ft.Colors.PRIMARY)
-                    if instancia.alias == configuracao.instancia_padrao
+                    if instancia.alias == cadastro.padrao
                     else None
                 ),
                 min_height=62,
                 content_padding=ft.Padding.symmetric(horizontal=14, vertical=4),
             ),
         )
-        for instancia in configuracao.instancias
+        for instancia in cadastro.itens
     ]
 
     lista = ft.Column(controls=cartoes, spacing=3, scroll=ft.ScrollMode.AUTO, expand=True)

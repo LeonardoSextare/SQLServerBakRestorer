@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 import pytest
-from bakrestorer.core.config import Instancia
+from bakrestorer.features.instancias import Instancia
 
 
 @pytest.fixture
