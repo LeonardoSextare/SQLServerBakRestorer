@@ -2,7 +2,7 @@ from enum import Enum
 
 import flet as ft
 
-from bakrestorer.desktop.tema import aparencias
+from bakrestorer.desktop_shell.tema import aparencias
 
 
 class Tema(Enum):

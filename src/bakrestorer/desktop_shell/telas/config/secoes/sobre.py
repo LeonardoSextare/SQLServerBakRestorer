@@ -2,7 +2,7 @@ from importlib.metadata import version
 
 import flet as ft
 
-from bakrestorer.desktop.servicos import CAMINHO_DA_CONFIGURACAO
+from bakrestorer.composition import CAMINHO_DA_CONFIGURACAO
 
 
 @ft.component

@@ -1,7 +1,7 @@
 import flet as ft
 
-from bakrestorer.desktop.moldura.estado import CONTEXTO_DA_JANELA
-from bakrestorer.desktop.tema import Tema
+from bakrestorer.desktop_shell.moldura.estado import CONTEXTO_DA_JANELA
+from bakrestorer.desktop_shell.tema import Tema
 
 
 @ft.component

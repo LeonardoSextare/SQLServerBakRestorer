@@ -1,6 +1,6 @@
 import flet as ft
 
-from bakrestorer.desktop.moldura.estado import EstadoApp, Tela
+from bakrestorer.desktop_shell.moldura.estado import EstadoApp, Tela
 
 TITULO = "SQLServerBackupRestorer"
 

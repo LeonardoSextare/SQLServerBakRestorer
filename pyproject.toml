@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bakrestorer = "bakrestorer.desktop.main:run"
+bakrestorer = "bakrestorer.desktop_shell.main:run"
 
 [dependency-groups]
 dev = [
@@ -36,9 +36,9 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["src/bakrestorer"]
-# O desktop fica fora da cobertura enquanto não tiver teste -- ver
+# A interface fica fora da cobertura enquanto não tiver teste -- ver
 # .claude/tarefas/desktop-sem-teste-automatizado.md
-omit = ["src/bakrestorer/desktop/*"]
+omit = ["src/bakrestorer/desktop_shell/*", "src/bakrestorer/features/*/gui/*"]
 
 [tool.coverage.report]
 fail_under = 100

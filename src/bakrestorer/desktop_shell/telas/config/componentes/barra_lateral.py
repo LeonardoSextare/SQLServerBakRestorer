@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import flet as ft
 
-from bakrestorer.desktop.telas.config.estado import EstadoConfig, Secao
+from bakrestorer.desktop_shell.telas.config.estado import EstadoConfig, Secao
 
 
 @dataclass(frozen=True)

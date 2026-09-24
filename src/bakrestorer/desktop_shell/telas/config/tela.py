@@ -2,12 +2,12 @@ from collections.abc import Callable
 
 import flet as ft
 
-from bakrestorer.desktop.telas.config.componentes.barra_lateral import barra_lateral
-from bakrestorer.desktop.telas.config.estado import CONTEXTO_DA_CONFIG, EstadoConfig, Secao
-from bakrestorer.desktop.telas.config.secoes.geral import secao_geral
-from bakrestorer.desktop.telas.config.secoes.instancias import secao_instancias
-from bakrestorer.desktop.telas.config.secoes.sobre import secao_sobre
+from bakrestorer.desktop_shell.telas.config.componentes.barra_lateral import barra_lateral
+from bakrestorer.desktop_shell.telas.config.estado import CONTEXTO_DA_CONFIG, EstadoConfig, Secao
+from bakrestorer.desktop_shell.telas.config.secoes.geral import secao_geral
+from bakrestorer.desktop_shell.telas.config.secoes.sobre import secao_sobre
 from bakrestorer.features.automacao.gui import secao_automacao
+from bakrestorer.features.instancias.gui import secao_instancias
 
 SECOES: dict[Secao, Callable[[], ft.Control]] = {
     Secao.GERAL: secao_geral,
@@ -52,7 +52,5 @@ def tela_config() -> ft.Control:
             vertical_alignment=ft.CrossAxisAlignment.STRETCH,
             expand=True,
         )
-
-    ft.use_effect(estado_config.carregar, [])
 
     return CONTEXTO_DA_CONFIG(estado_config, quadro)

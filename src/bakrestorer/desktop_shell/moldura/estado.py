@@ -3,7 +3,7 @@ from enum import Enum
 
 import flet as ft
 
-from bakrestorer.desktop.tema import Tema
+from bakrestorer.desktop_shell.tema import Tema
 
 
 class Tela(Enum):
