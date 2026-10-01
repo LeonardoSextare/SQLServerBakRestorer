@@ -6,8 +6,6 @@ dependencies = [
     "flet>=0.86.5",
     "pydantic>=2.13.5",
     "python-tds>=1.17.1",
-    "ruff>=0.16.6",
-    "ty>=0.0.80",
 ]
 
 [project.scripts]
@@ -19,7 +17,7 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.16.6",
     "testcontainers[mssql]>=4.15.0",
-    "ty>=0.0.78",
+    "ty>=0.0.80",
 ]
 
 [build-system]

@@ -659,8 +659,6 @@ dependencies = [
     { name = "flet" },
     { name = "pydantic" },
     { name = "python-tds" },
-    { name = "ruff" },
-    { name = "ty" },
 ]
 
 [package.dev-dependencies]
@@ -677,8 +675,6 @@ requires-dist = [
     { name = "flet", specifier = ">=0.86.5" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "python-tds", specifier = ">=1.17.1" },
-    { name = "ruff", specifier = ">=0.16.6" },
-    { name = "ty", specifier = ">=0.0.80" },
 ]
 
 [package.metadata.requires-dev]
@@ -687,7 +683,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.16.6" },
     { name = "testcontainers", extras = ["mssql"], specifier = ">=4.15.0" },
-    { name = "ty", specifier = ">=0.0.78" },
+    { name = "ty", specifier = ">=0.0.80" },
 ]
 
 [[package]]
