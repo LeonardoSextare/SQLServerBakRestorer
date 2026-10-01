@@ -1,6 +1,6 @@
 [project]
 name = "sqlserverbakrestorer"
-version = "0.1.0"
+version = "0.1.0a1"
 requires-python = ">=3.14"
 dependencies = [
     "flet>=0.86.5",
@@ -34,8 +34,7 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["src/bakrestorer"]
-# A interface fica fora da cobertura enquanto não tiver teste -- ver
-# .claude/tarefas/desktop-sem-teste-automatizado.md
+# A interface fica fora da cobertura enquanto não tiver teste
 omit = ["src/bakrestorer/desktop_shell/*", "src/bakrestorer/features/*/gui/*"]
 
 [tool.coverage.report]
