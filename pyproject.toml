@@ -2,6 +2,8 @@
 name = "sqlserverbakrestorer"
 version = "0.1.0a1"
 requires-python = ">=3.14"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 dependencies = [
     "flet>=0.86.5",
     "pydantic>=2.13.5",
