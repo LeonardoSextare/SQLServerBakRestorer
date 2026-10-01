@@ -1,6 +1,7 @@
 [project]
 name = "sqlserverbakrestorer"
 version = "0.1.0a1"
+authors = [{ name = "Leonardo Sextare" }]
 requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
