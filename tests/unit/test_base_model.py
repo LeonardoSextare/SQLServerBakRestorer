@@ -151,7 +151,7 @@ class TestAlterando:
         self,
         pedido: Pedido,
     ) -> None:
-        with pytest.raises(RuntimeError), pedido.alterando() as rascunho:
+        with pytest.raises(RuntimeError), pedido.alterando() as rascunho:  # noqa: PT012
             rascunho.escolhido = None
             mensagem = "algo deu errado no meio"
             raise RuntimeError(mensagem)

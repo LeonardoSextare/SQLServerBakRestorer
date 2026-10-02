@@ -37,6 +37,7 @@
   },
 
   // Ty
+  "ty.path": ["${workspaceFolder}/.venv/Scripts/ty.exe"],
   "ty.disableLanguageServices": true,
   "python.languageServer": "Pylance",
   "ty.diagnosticMode": "workspace"

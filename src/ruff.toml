@@ -6,10 +6,20 @@ exclude = ["bakrestorer/desktop_old"]
 [lint]
 extend-select = ["ALL"]
 
-select = ["I001", "FIX002"]
-ignore = ["D100", "D104", "CPY001", "TC001", "TC003", "TD002", "TD003"]
+select = [
+    "I001",
+    "FIX002",
+]
+ignore = [
+    "D100",
+    "D107",
+    "D104",
+    "CPY001",
+    "TC001",
+    "TC003",
+    "TD002",
+    "TD003",
+]
 fixable = ["I001"]
 unfixable = ["ALL"]
 
-[lint.per-file-ignores]
-"exceptions.py" = ["D107"]
