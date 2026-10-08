@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checagens:
+    name: Checagens
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Instalar o uv e o Python 3.14
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: 3.14
+
+      - name: Instalar as dependências
+        run: uv sync --locked
