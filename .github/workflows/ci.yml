@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  checagens:
-    name: Checagens
+  analise-estatica:
+    name: Análise estática
     runs-on: ubuntu-latest
 
     steps:
@@ -17,7 +17,20 @@ jobs:
       - name: Instalar o uv e o Python 3.14
         uses: astral-sh/setup-uv@v10.2.0
         with:
-          python-version: 3.14
+          python-version: "3.14"
 
       - name: Instalar as dependências
+        id: dependencias
         run: uv sync --locked
+
+      - name: Lint
+        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        run: uv run ruff check src tests --output-format=github --ignore FIX002
+
+      - name: Formatação
+        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        run: uv run ruff format --check src tests --output-format=github
+
+      - name: Tipos
+        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        run: uv run ty check src tests --output-format=github
