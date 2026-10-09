@@ -34,3 +34,22 @@ jobs:
       - name: Tipos
         if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
         run: uv run ty check src tests --output-format=github
+
+  testes-unitarios:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Instalar o uv e o Python 3.14
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Instalar as dependências
+        run: uv sync --locked
+
+      - name: Testes unitários
+        run: uv run pytest tests/unit
