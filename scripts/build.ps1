@@ -34,15 +34,51 @@ function Export-RestricoesDeDependencias {
     uv export @argumentosDoExport
 }
 
-function Get-Versao {
-    $versaoDoProjeto = uv version --short
+function Get-VersaoDoProjeto {
+    return uv run python -c 'from bakrestorer._versao import VERSAO; print(VERSAO)'
+}
 
-    if ($Release) {
-        return $versaoDoProjeto
+function Assert-VersaoDeRelease {
+    param([string] $Versao)
+
+    $versaoTemSufixo = $Versao -match '[^\d.]'
+
+    if ($versaoTemSufixo) {
+        throw "Release exige uma versão limpa: um commit com tag e sem mudanças pendentes. A versão atual é $Versao."
+    }
+}
+
+function ConvertTo-VersaoSemVer {
+    param([string] $Versao)
+
+    $formatoPep440 = '^(?<major>\d+)\.(?<minor>\d+)(\.(?<patch>\d+))?(\.dev(?<dev>\d+)(\+(?<local>.+))?)?$'
+
+    if ($Versao -notmatch $formatoPep440) {
+        throw "A versão $Versao está fora do formato que o script sabe converter."
     }
 
-    $commit = git rev-parse --short HEAD
-    return "$versaoDoProjeto-dev-$commit"
+    $patch = $Matches['patch'] ?? '0'
+    $versaoSemVer = "$($Matches['major']).$($Matches['minor']).$patch"
+
+    if ($Matches['dev']) {
+        $versaoSemVer += "-dev.$($Matches['dev'])"
+    }
+
+    if ($Matches['local']) {
+        $versaoSemVer += ".$($Matches['local'])"
+    }
+
+    return $versaoSemVer
+}
+
+function Get-Versao {
+    $versaoDoProjeto = Get-VersaoDoProjeto
+
+    if ($Release) {
+        Assert-VersaoDeRelease -Versao $versaoDoProjeto
+    }
+
+    return ConvertTo-VersaoSemVer -Versao $versaoDoProjeto
 }
 
 function Get-Produto {
