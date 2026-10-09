@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Empacotar (dev)",
+            "label": "Build (dev)",
             "detail": "Gera o .exe de desenvolvimento",
             "icon": { "id": "package", "color": "terminal.ansiCyan" },
             "type": "process",
