@@ -1,7 +1,6 @@
-from importlib.metadata import version
-
 import flet as ft
 
+from bakrestorer._versao import VERSAO
 from bakrestorer.composition import CAMINHO_DA_CONFIGURACAO
 
 
@@ -94,7 +93,7 @@ def _cartao_de_detalhes() -> ft.Control:
     estilo_de_link = ft.TextStyle(color=ft.Colors.PRIMARY, decoration=ft.TextDecoration.UNDERLINE)
     tabela = {
         "Aplicativo": ("SQLServerBackupRestorer", None),
-        "Versão": (version("sqlserverbakrestorer"), None),
+        "Versão": (VERSAO, None),
         "Autor": ("Leonardo Sextare", None),
         "Configuração": (str(arquivo), arquivo.parent.as_uri()),
         "Repositorio": ("https://github.com/leonardosextare", "https://github.com/leonardosextare"),
