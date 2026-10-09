@@ -5,3 +5,6 @@ __pycache__/
 
 # Flet
 .flet/
+
+# Zensical
+site/
