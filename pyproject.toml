@@ -1,6 +1,6 @@
 [project]
 name = "sqlserverbakrestorer"
-version = "0.1.0a1"
+version = "0.1.0"
 authors = [{ name = "Leonardo Sextare" }]
 requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
@@ -11,9 +11,6 @@ dependencies = [
     "python-tds>=1.17.1",
 ]
 
-[project.scripts]
-bakrestorer = "bakrestorer.desktop_shell.main:run"
-
 [dependency-groups]
 dev = [
     "pytest>=8.3",
@@ -22,9 +19,10 @@ dev = [
     "testcontainers[mssql]>=4.15.0",
     "ty>=0.0.80",
 ]
-docs = [
-    "zensical>=0.0.69",
-]
+docs = ["zensical>=0.0.69"]
+
+[project.scripts]
+bakrestorer = "bakrestorer.desktop_shell.main:run"
 
 [tool.uv]
 default-groups = "all"
