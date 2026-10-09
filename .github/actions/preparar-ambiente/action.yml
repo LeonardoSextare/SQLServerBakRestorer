@@ -1,0 +1,15 @@
+name: Preparar o ambiente
+description: Instala o uv, o Python 3.14 e as dependências do projeto.
+
+runs:
+  using: composite
+
+  steps:
+    - name: Instalar o uv e o Python 3.14
+      uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: "3.14"
+
+    - name: Instalar as dependências
+      shell: bash
+      run: uv sync --locked

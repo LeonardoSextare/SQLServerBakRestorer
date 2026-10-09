@@ -13,25 +13,20 @@ jobs:
       - name: Baixar o código
         uses: actions/checkout@v7
 
-      - name: Instalar o uv e o Python 3.14
-        uses: astral-sh/setup-uv@v10.2.0
-        with:
-          python-version: "3.14"
-
-      - name: Instalar as dependências
-        id: dependencias
-        run: uv sync --locked
+      - name: Preparar o ambiente
+        id: ambiente
+        uses: ./.github/actions/preparar-ambiente
 
       - name: Lint
-        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.ambiente.outcome == 'success' }}
         run: uv run ruff check src tests --output-format=github --ignore FIX002
 
       - name: Formatação
-        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.ambiente.outcome == 'success' }}
         run: uv run ruff format --check src tests --output-format=github
 
       - name: Tipos
-        if: ${{ !cancelled() && steps.dependencias.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.ambiente.outcome == 'success' }}
         run: uv run ty check src tests --output-format=github
 
   testes-unitarios:
@@ -42,13 +37,8 @@ jobs:
       - name: Baixar o código
         uses: actions/checkout@v7
 
-      - name: Instalar o uv e o Python 3.14
-        uses: astral-sh/setup-uv@v10.2.0
-        with:
-          python-version: "3.14"
-
-      - name: Instalar as dependências
-        run: uv sync --locked
+      - name: Preparar o ambiente
+        uses: ./.github/actions/preparar-ambiente
 
       - name: Testes unitários
         run: uv run pytest tests/unit
@@ -61,13 +51,8 @@ jobs:
       - name: Baixar o código
         uses: actions/checkout@v7
 
-      - name: Instalar o uv e o Python 3.14
-        uses: astral-sh/setup-uv@v10.2.0
-        with:
-          python-version: "3.14"
-
-      - name: Instalar as dependências
-        run: uv sync --locked
+      - name: Preparar o ambiente
+        uses: ./.github/actions/preparar-ambiente
 
       - name: Testes de integração
         run: uv run pytest tests/integration
