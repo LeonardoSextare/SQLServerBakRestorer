@@ -57,7 +57,7 @@ jobs:
         run: git tag $env:TAG
 
       - name: Atualizar a versão do projeto
-        run: uv sync --locked --no-default-groups
+        run: uv sync --locked --inexact --no-default-groups
 
       - name: Fixar as dependências nas versões do uv.lock
         run: |
