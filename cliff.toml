@@ -1,0 +1,17 @@
+[git]
+conventional_commits = true
+filter_unconventional = true
+protect_breaking_commits = true
+tag_pattern = '^v\d+\.\d+\.\d+$'
+commit_parsers = [
+    { field = "breaking", pattern = "true", group = "incompatível" },
+    { message = "^feat", group = "feat" },
+    { message = "^fix", group = "fix" },
+    { message = "^perf", group = "perf" },
+    { message = ".*", skip = true },
+]
+
+[bump]
+initial_tag = "v0.1.0"
+features_always_bump_minor = true
+breaking_always_bump_major = false

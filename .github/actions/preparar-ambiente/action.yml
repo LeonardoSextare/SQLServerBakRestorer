@@ -1,6 +1,12 @@
 name: Preparar o ambiente
 description: Instala o uv, o Python 3.14 e as dependências do projeto.
 
+inputs:
+  uv-sync-args:
+    description: Opções extras do uv sync, como "--group dev" ou "--only-group docs".
+    required: false
+    default: ""
+
 runs:
   using: composite
 
@@ -12,4 +18,10 @@ runs:
 
     - name: Instalar as dependências
       shell: bash
-      run: uv sync --locked --no-group docs
+      env:
+        SYNC_ARGS: ${{ inputs.uv-sync-args }}
+      run: uv sync --locked --no-default-groups $SYNC_ARGS
+
+    - name: Congelar o ambiente para o resto do job
+      shell: bash
+      run: echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"

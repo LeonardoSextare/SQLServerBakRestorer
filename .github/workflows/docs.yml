@@ -9,6 +9,7 @@ on:
       - zensical.toml
       - uv.lock
       - .github/workflows/docs.yml
+      - .github/actions/preparar-ambiente/**
 
 permissions:
   contents: read
@@ -31,16 +32,13 @@ jobs:
       - name: Baixar o código
         uses: actions/checkout@v7
 
-      - name: Instalar o uv e o Python 3.14
-        uses: astral-sh/setup-uv@v10.2.0
+      - name: Preparar o ambiente
+        uses: ./.github/actions/preparar-ambiente
         with:
-          python-version: "3.14"
-
-      - name: Instalar o Zensical
-        run: uv sync --locked --only-group docs
+          uv-sync-args: --only-group docs
 
       - name: Montar o site
-        run: uv run --no-sync zensical build --clean
+        run: uv run zensical build --clean
 
       - name: Configurar o Pages
         uses: actions/configure-pages@v6

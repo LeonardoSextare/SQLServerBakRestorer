@@ -26,6 +26,8 @@ jobs:
       - name: Preparar o ambiente
         id: ambiente
         uses: ./.github/actions/preparar-ambiente
+        with:
+          uv-sync-args: --group dev
 
       - name: Lint
         if: ${{ !cancelled() && steps.ambiente.outcome == 'success' }}
@@ -49,6 +51,8 @@ jobs:
 
       - name: Preparar o ambiente
         uses: ./.github/actions/preparar-ambiente
+        with:
+          uv-sync-args: --group dev
 
       - name: Testes unitários
         run: uv run pytest tests/unit -v --color=yes --cov --cov-report= --junitxml=resultado-unitarios.xml
@@ -74,6 +78,8 @@ jobs:
 
       - name: Preparar o ambiente
         uses: ./.github/actions/preparar-ambiente
+        with:
+          uv-sync-args: --group dev
 
       - name: Testes de integração
         run: uv run pytest tests/integration -v --color=yes --cov --cov-report= --junitxml=resultado-integracao.xml
@@ -100,6 +106,8 @@ jobs:
 
       - name: Preparar o ambiente
         uses: ./.github/actions/preparar-ambiente
+        with:
+          uv-sync-args: --group dev
 
       - name: Baixar os resultados
         uses: actions/download-artifact@v8
