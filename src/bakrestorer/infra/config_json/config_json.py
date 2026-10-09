@@ -57,17 +57,19 @@ class ConfigJson:
         except ArquivoNaoEncontradoError:
             gravado = {}
 
+        try:
+            texto = json.dumps({**gravado, self._chave: conteudo}, indent=2, ensure_ascii=False)
+            bytes_do_arquivo = texto.encode(CODIFICACAO)
+            self._caminho.parent.mkdir(parents=True, exist_ok=True)
+        except (OSError, TypeError, ValueError) as falha:
+            raise ArquivoNaoGravavelError(self._caminho) from falha
+
         arquivo_temp = self._caminho.with_name(self._caminho.name + ".tmp")
 
         try:
-            self._caminho.parent.mkdir(parents=True, exist_ok=True)
-            arquivo_temp.write_text(
-                json.dumps({**gravado, self._chave: conteudo}, indent=2, ensure_ascii=False),
-                encoding=CODIFICACAO,
-                newline="\n",
-            )
+            arquivo_temp.write_bytes(bytes_do_arquivo)
             arquivo_temp.replace(self._caminho)
-        except (OSError, TypeError, ValueError) as falha:
+        except OSError as falha:
             arquivo_temp.unlink(missing_ok=True)
             raise ArquivoNaoGravavelError(self._caminho) from falha
 
