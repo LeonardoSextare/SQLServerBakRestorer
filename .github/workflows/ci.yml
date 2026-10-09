@@ -75,3 +75,27 @@ jobs:
           name: cobertura-integracao
           path: .coverage.integracao
           include-hidden-files: true
+
+  cobertura:
+    name: Cobertura
+    needs: [testes-unitarios, testes-integracao]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Preparar o ambiente
+        uses: ./.github/actions/preparar-ambiente
+
+      - name: Baixar as medições
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cobertura-*
+          merge-multiple: true
+
+      - name: Juntar as medições
+        run: uv run coverage combine
+
+      - name: Mostrar o relatório
+        run: uv run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
