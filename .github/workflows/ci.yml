@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+
 jobs:
   analise-estatica:
     name: Análise estática
@@ -41,7 +42,16 @@ jobs:
         uses: ./.github/actions/preparar-ambiente
 
       - name: Testes unitários
-        run: uv run pytest tests/unit
+        run: uv run pytest tests/unit -v --color=yes --cov --cov-report=
+        env:
+          COVERAGE_FILE: .coverage.unitarios
+
+      - name: Guardar a cobertura
+        uses: actions/upload-artifact@v7
+        with:
+          name: cobertura-unitarios
+          path: .coverage.unitarios
+          include-hidden-files: true
 
   testes-integracao:
     name: Testes de integração
@@ -55,4 +65,13 @@ jobs:
         uses: ./.github/actions/preparar-ambiente
 
       - name: Testes de integração
-        run: uv run pytest tests/integration
+        run: uv run pytest tests/integration -v --color=yes --cov --cov-report=
+        env:
+          COVERAGE_FILE: .coverage.integracao
+
+      - name: Guardar a cobertura
+        uses: actions/upload-artifact@v7
+        with:
+          name: cobertura-integracao
+          path: .coverage.integracao
+          include-hidden-files: true
