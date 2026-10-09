@@ -1,9 +1,7 @@
 #Requires -version 7.6.0
 
 [CmdletBinding()]
-param(
-    [switch] $Release
-)
+param()
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -11,7 +9,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 # ============================ Configurações ============================
 
-$NOME_DO_PRODUTO = 'SQLServerBackupRestorer'
+$NOME_DO_PRODUTO = 'SQLServerBackupRestorer (dev)'
 $RAIZ_DO_PROJETO = Split-Path -Parent $PSScriptRoot
 $PASTA_DO_BUILD = Join-Path -Path $RAIZ_DO_PROJETO -ChildPath 'build'
 $ARQUIVO_DE_RESTRICOES = Join-Path -Path $PASTA_DO_BUILD -ChildPath 'restricoes.txt'
@@ -38,16 +36,6 @@ function Get-VersaoDoProjeto {
     return uv run python -c 'from bakrestorer._versao import VERSAO; print(VERSAO)'
 }
 
-function Assert-VersaoDeRelease {
-    param([string] $Versao)
-
-    $versaoTemSufixo = $Versao -match '[^\d.]'
-
-    if ($versaoTemSufixo) {
-        throw "Release exige uma versão limpa: um commit com tag e sem mudanças pendentes. A versão atual é $Versao."
-    }
-}
-
 function ConvertTo-VersaoSemVer {
     param([string] $Versao)
 
@@ -71,39 +59,21 @@ function ConvertTo-VersaoSemVer {
     return $versaoSemVer
 }
 
-function Get-Versao {
-    $versaoDoProjeto = Get-VersaoDoProjeto
-
-    if ($Release) {
-        Assert-VersaoDeRelease -Versao $versaoDoProjeto
-    }
-
-    return ConvertTo-VersaoSemVer -Versao $versaoDoProjeto
-}
-
-function Get-Produto {
-    if ($Release) {
-        return $NOME_DO_PRODUTO
-    }
-
-    return "$NOME_DO_PRODUTO (dev)"
-}
-
 function Build-Aplicativo {
-    $versao = Get-Versao
-    $produto = Get-Produto
+    $versaoDoProjeto = Get-VersaoDoProjeto
+    $versao = ConvertTo-VersaoSemVer -Versao $versaoDoProjeto
 
     $argumentosDoBuild = @(
         'windows'
         '--build-version', $versao
-        '--product', $produto
+        '--product', $NOME_DO_PRODUTO
     )
 
     if ($VerbosePreference -eq 'Continue') {
         $argumentosDoBuild += '-v'
     }
 
-    Write-Host "== Empacotando $produto $versao"
+    Write-Host "== Empacotando $NOME_DO_PRODUTO $versao"
     Write-Host "   pip restrito por $ARQUIVO_DE_RESTRICOES"
 
     $env:PIP_CONSTRAINT = $ARQUIVO_DE_RESTRICOES
