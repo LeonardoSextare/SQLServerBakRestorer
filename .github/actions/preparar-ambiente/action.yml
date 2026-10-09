@@ -12,4 +12,4 @@ runs:
 
     - name: Instalar as dependências
       shell: bash
-      run: uv sync --locked
+      run: uv sync --locked --no-group docs

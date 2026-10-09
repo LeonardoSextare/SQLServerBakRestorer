@@ -3,8 +3,7 @@
 
 
 [![CI](https://github.com/LeonardoSextare/SQLServerBakRestorer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LeonardoSextare/SQLServerBakRestorer/actions/workflows/ci.yml)
-![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
-[![Versão](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FLeonardoSextare%2FSQLServerBakRestorer%2Fmaster%2Fpyproject.toml&query=%24.project.version&label=vers%C3%A3o&color=blue)](https://github.com/LeonardoSextare/SQLServerBakRestorer/releases)
+[![Versão](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FLeonardoSextare%2FSQLServerBakRestorer%2Fmain%2Fpyproject.toml&query=%24.project.version&label=vers%C3%A3o&color=orange)](https://github.com/LeonardoSextare/SQLServerBakRestorer/releases)
 [![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Plataforma: Windows](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
 [![Licença: GPL-3.0](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-blue)](LICENSE)

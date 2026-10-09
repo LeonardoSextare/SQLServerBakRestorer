@@ -22,6 +22,12 @@ dev = [
     "testcontainers[mssql]>=4.15.0",
     "ty>=0.0.80",
 ]
+docs = [
+    "zensical>=0.0.69",
+]
+
+[tool.uv]
+default-groups = "all"
 
 [build-system]
 requires = ["hatchling"]
