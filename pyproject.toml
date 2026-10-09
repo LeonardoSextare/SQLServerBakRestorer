@@ -46,3 +46,20 @@ omit = ["src/bakrestorer/desktop_shell/*", "src/bakrestorer/features/*/gui/*"]
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.flet]
+product = "SQLServerBackupRestorer"
+company = "Leonardo Sextare"
+copyright = "Copyright (C) 2026 Leonardo Sextare"
+build_number = 1
+
+[tool.flet.app]
+path = "src"
+exclude = ["ruff.toml", ".ruff_cache"]
+hide_window_on_start = true
+
+[tool.flet.flutter.pubspec.dependency_overrides]
+jni_flutter = "1.0.3"
+
+[tool.flet.windows]
+artifact = "SQLServerBackupRestorer"

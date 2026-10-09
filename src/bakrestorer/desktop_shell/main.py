@@ -11,10 +11,10 @@ async def main(pagina: ft.Page) -> None:
         pagina: Janela entregue pelo Flet.
 
     Note:
-        O tamanho é enviado antes de pedir para centralizar. Centralizar
-        posiciona a janela pelo meio dela, usando o tamanho que o cliente
-        conhece naquele momento; pedir antes deixa a janela centralizada como
-        se ainda tivesse o tamanho padrão.
+        A janela nasce escondida e só aparece depois de dimensionada e
+        centralizada, para o usuário não ver ela abrir no tamanho padrão e
+        encolher. O tamanho é enviado antes de pedir para centralizar, porque
+        centralizar usa o tamanho que o cliente conhece naquele momento.
 
     """
     pagina.title = "SQLServerBackupRestorer"
@@ -25,14 +25,16 @@ async def main(pagina: ft.Page) -> None:
     pagina.window.height = 470
     pagina.update()
 
-    # await pagina.window.center() # noqa: ERA001
+    await pagina.window.center()
+    pagina.window.visible = True
+    pagina.update()
 
     pagina.render(moldura, EstadoApp())
 
 
 def run() -> None:
     """Abre o aplicativo."""
-    ft.run(main)
+    ft.run(main, view=ft.AppView.FLET_APP_HIDDEN)
 
 
 if __name__ == "__main__":
