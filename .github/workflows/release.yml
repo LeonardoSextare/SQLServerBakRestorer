@@ -23,3 +23,83 @@ jobs:
 
       - name: Preparar o ambiente
         uses: ./.github/actions/preparar-ambiente
+
+      - name: Calcular a próxima versão
+        id: versao
+        shell: pwsh
+        env:
+          GIT_CLIFF_VERSION: ${{ vars.GIT_CLIFF_VERSION }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          if (-not $env:GIT_CLIFF_VERSION) {
+              throw "Crie a variable GIT_CLIFF_VERSION no repositório, com a versão do git-cliff."
+          }
+
+          $proximaTag = uvx "git-cliff@$env:GIT_CLIFF_VERSION" --bumped-version
+          $tagJaExiste = git tag --list $proximaTag
+
+          if ($tagJaExiste) {
+              throw "Nada para lançar: não há feat, fix nem perf desde a $proximaTag."
+          }
+
+          $proximaVersao = $proximaTag.TrimStart('v')
+
+          Write-Host "Próxima versão: $proximaVersao"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=$proximaTag"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "versao=$proximaVersao"
+
+      - name: Criar a tag no runner
+        env:
+          TAG: ${{ steps.versao.outputs.tag }}
+        run: git tag $env:TAG
+
+      - name: Atualizar a versão do projeto
+        run: uv sync --locked --no-default-groups
+
+      - name: Fixar as dependências nas versões do uv.lock
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $arquivoDeRestricoes = Join-Path -Path $env:RUNNER_TEMP -ChildPath 'restricoes.txt'
+
+          $argumentosDoExport = @(
+              '--locked'
+              '--no-default-groups'
+              '--no-emit-project'
+              '--format', 'requirements-txt'
+              '--output-file', $arquivoDeRestricoes
+              '--quiet'
+          )
+          uv export @argumentosDoExport
+
+          Add-Content -Path $env:GITHUB_ENV -Value "PIP_CONSTRAINT=$arquivoDeRestricoes"
+
+      - name: Empacotar o aplicativo
+        id: empacotamento
+        uses: flet-dev/flet-build-action@v1
+        with:
+          target: windows
+          build-version: ${{ steps.versao.outputs.versao }}
+          build-number: ${{ github.run_number }}
+
+      - name: Criar a release como rascunho
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.versao.outputs.tag }}
+          PACOTE: ${{ steps.empacotamento.outputs.archive-path }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $pacoteDaRelease = Join-Path -Path $env:RUNNER_TEMP -ChildPath "SQLServerBackupRestorer-$env:TAG-windows.zip"
+          Copy-Item -Path $env:PACOTE -Destination $pacoteDaRelease
+
+          $argumentosDaRelease = @(
+              'release', 'create', $env:TAG
+              $pacoteDaRelease
+              '--draft'
+              '--target', $env:GITHUB_SHA
+              '--title', $env:TAG
+              '--notes', 'Escreva aqui as notas desta versão antes de publicar.'
+          )
+          gh @argumentosDaRelease
