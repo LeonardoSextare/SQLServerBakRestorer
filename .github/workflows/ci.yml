@@ -5,6 +5,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths-ignore:
+      - docs/**
+      - zensical.toml
+      - README.md
+      - LICENSE
   workflow_dispatch:
 
 permissions:
