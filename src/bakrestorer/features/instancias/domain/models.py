@@ -12,7 +12,7 @@ class Instancia(BakRestorerModel):
 
     ERRO_DE_VALIDACAO = InstanciaInvalidaError
 
-    # TODO: senha em texto puro -- .claude/tarefas/senha-gravada-em-texto-puro.md
+    # TODO: senha em texto puro -- tarefa #014
     alias: str = Field(min_length=1)
     host: str = Field(default="localhost", min_length=1)
     nome: str = Field(min_length=1)
