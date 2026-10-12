@@ -96,7 +96,10 @@ def _cartao_de_detalhes() -> ft.Control:
         "Versão": (VERSAO, None),
         "Autor": ("Leonardo Sextare", None),
         "Configuração": (str(arquivo), arquivo.parent.as_uri()),
-        "Repositorio": ("https://github.com/leonardosextare", "https://github.com/leonardosextare"),
+        "Repositório": (
+            "https://github.com/LeonardoSextare/SQLServerBakRestorer",
+            "https://github.com/LeonardoSextare/SQLServerBakRestorer",
+        ),
     }
 
     linhas: list[ft.Control] = [

@@ -1,13 +1,13 @@
 import flet as ft
 
-from bakrestorer.features.instancias.gui.estado import CONTEXTO_DAS_INSTANCIAS, EstadoDasInstancias
+from bakrestorer.features.instancias.gui.view_model import CONTEXTO_DAS_INSTANCIAS, InstanciasViewModel
 
 
 @ft.component
 def secao_instancias() -> ft.Control:
     """Mostra as instâncias do SQL Server já cadastradas.
 
-    O estado nasce aqui porque esta seção é o topo do que a feature desenha:
+    O view model nasce aqui porque esta seção é o topo do que a feature desenha:
     quem a monta não precisa saber que ela lê disco.
 
     Sem nada cadastrado, a seção não mostra lista vazia: mostra o convite para
@@ -18,16 +18,16 @@ def secao_instancias() -> ft.Control:
     centralizar numa área encurtada por baixo sobe o conteúdo pela metade do que
     foi encurtado.
     """
-    estado, _ = ft.use_state(EstadoDasInstancias())
+    view_model, _ = ft.use_state(InstanciasViewModel())
 
-    ft.use_effect(estado.carregar, [])
+    ft.use_effect(view_model.carregar, [])
 
-    return CONTEXTO_DAS_INSTANCIAS(estado, lambda: _quadro(estado))
+    return CONTEXTO_DAS_INSTANCIAS(view_model, lambda: _quadro(view_model))
 
 
-def _quadro(estado: EstadoDasInstancias) -> ft.Control:
+def _quadro(view_model: InstanciasViewModel) -> ft.Control:
     """Desenha o cabeçalho e, abaixo dele, a lista ou o convite."""
-    cadastro = estado.cadastro
+    cadastro = view_model.cadastro
 
     cabecalho = ft.Container(
         content=ft.Row(

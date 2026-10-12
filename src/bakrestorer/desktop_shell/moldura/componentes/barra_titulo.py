@@ -1,30 +1,30 @@
 import flet as ft
 
-from bakrestorer.desktop_shell.moldura.estado import EstadoApp, Tela
+from bakrestorer.desktop_shell.moldura.view_model import JanelaViewModel, Tela
 
 TITULO = "SQLServerBackupRestorer"
 
 
 @ft.component
-def barra_titulo(estado: EstadoApp) -> ft.Control:
+def barra_titulo(view_model: JanelaViewModel) -> ft.Control:
     """Desenha a barra que substitui a do Windows.
 
     A barra do sistema fica escondida, então esta é a única forma de arrastar,
     minimizar e fechar a janela. Por isso ela pertence à moldura, e não a uma
     tela: precisa estar visível o tempo todo.
 
-    Recebe o estado por parâmetro, e não por contexto, porque componente que
+    Recebe o view model por parâmetro, e não por contexto, porque componente que
     mora em `desktop/componentes/` não pode exigir uma tela específica acima
     dele.
 
     Args:
-        estado: O que a janela sabe. Mudar um campo dele redesenha esta barra.
+        view_model: O que a janela sabe. Mudar um campo dele redesenha esta barra.
 
     Returns:
         A linha da barra de título.
 
     """
-    mostrando_configuracao = estado.tela is Tela.CONFIGURACAO
+    mostrando_configuracao = view_model.tela is Tela.CONFIGURACAO
 
     titulo_arrastavel = ft.WindowDragArea(
         content=ft.Container(
@@ -47,7 +47,7 @@ def barra_titulo(estado: EstadoApp) -> ft.Control:
         tooltip="Voltar" if mostrando_configuracao else "Configurações",
         icon_size=22,
         width=48,
-        on_click=estado.alternar_tela,
+        on_click=view_model.alternar_tela,
     )
 
     botao_de_minimizar = ft.IconButton(

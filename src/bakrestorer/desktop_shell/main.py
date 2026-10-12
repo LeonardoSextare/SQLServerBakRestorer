@@ -1,7 +1,7 @@
 import flet as ft
 
-from bakrestorer.desktop_shell.moldura.estado import EstadoApp
 from bakrestorer.desktop_shell.moldura.moldura import moldura
+from bakrestorer.desktop_shell.moldura.view_model import JanelaViewModel
 
 
 async def main(pagina: ft.Page) -> None:
@@ -29,7 +29,7 @@ async def main(pagina: ft.Page) -> None:
     pagina.window.visible = True
     pagina.update()
 
-    pagina.render(moldura, EstadoApp())
+    pagina.render(moldura, JanelaViewModel())
 
 
 def run() -> None:

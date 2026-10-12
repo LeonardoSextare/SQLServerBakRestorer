@@ -1,6 +1,6 @@
 import flet as ft
 
-from bakrestorer.desktop_shell.moldura.estado import CONTEXTO_DA_JANELA
+from bakrestorer.desktop_shell.moldura.view_model import CONTEXTO_DA_JANELA
 from bakrestorer.desktop_shell.tema import Tema
 
 
@@ -12,18 +12,18 @@ def secao_geral() -> ft.Control:
         A coluna da seção.
 
     Note:
-        O estado da janela chega por contexto, e não por parâmetro: o tema é
+        O view model da janela chega por contexto, e não por parâmetro: o tema é
         assunto da janela inteira, e o caminho até aqui passa por componentes
         que não têm nada a ver com ele.
 
     """
-    estado = ft.use_context(CONTEXTO_DA_JANELA)
+    view_model = ft.use_context(CONTEXTO_DA_JANELA)
 
     def escolher_tema(evento: ft.Event[ft.Dropdown]) -> None:
         escolhido = evento.control.value
 
         if escolhido:
-            estado.mudar_tema(Tema[escolhido])
+            view_model.mudar_tema(Tema[escolhido])
 
     def avisar_que_nao_associa() -> None:
         ft.context.page.show_dialog(ft.SnackBar(content=ft.Text("Associação de arquivos ainda não implementada")))
@@ -71,7 +71,7 @@ def secao_geral() -> ft.Control:
         content=ft.ListTile(
             title=ft.Text("Tema", size=15),
             trailing=ft.Dropdown(
-                value=estado.tema.name,
+                value=view_model.tema.name,
                 options=[ft.DropdownOption(key=disponivel.name, text=disponivel.rotulo) for disponivel in Tema],
                 width=140,
                 text_size=13,
