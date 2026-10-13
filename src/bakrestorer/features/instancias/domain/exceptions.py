@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from bakrestorer.exceptions import BakRestorerError, ModelInvalidoError
 
 
@@ -16,14 +18,18 @@ class CadastroInvalidoError(ModelInvalidoError, InstanciasError):
 class InstanciaError(InstanciasError):
     """Falha ao alterar uma instância do cadastro."""
 
-    def __init__(self, apelido: str) -> None:
-        super().__init__(apelido)
-        self.apelido = apelido
-
 
 class InstanciaNaoEncontradaError(InstanciaError):
-    """Nenhuma instância cadastrada usa esse apelido."""
+    """Nenhuma instância cadastrada tem esse id."""
+
+    def __init__(self, id_da_instancia: UUID) -> None:
+        super().__init__(str(id_da_instancia))
+        self.id_da_instancia = id_da_instancia
 
 
 class InstanciaJaExisteError(InstanciaError):
-    """Já existe uma instância cadastrada com esse apelido."""
+    """Já existe outra instância cadastrada com esse apelido."""
+
+    def __init__(self, apelido: str) -> None:
+        super().__init__(apelido)
+        self.apelido = apelido
