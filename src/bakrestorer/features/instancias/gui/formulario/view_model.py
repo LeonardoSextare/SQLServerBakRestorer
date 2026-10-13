@@ -55,7 +55,7 @@ class FormularioViewModel:
         self.digitado = {
             "apelido": instancia.apelido,
             "host": instancia.host,
-            "nome": instancia.nome,
+            "nome": instancia.nome or "",
             "usuario": instancia.usuario,
             "senha": instancia.senha,
             "pasta_dados": str(instancia.pasta_dados or ""),

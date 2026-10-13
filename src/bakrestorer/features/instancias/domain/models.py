@@ -16,12 +16,31 @@ class Instancia(BakRestorerModel):
     id: UUID = Field(default_factory=uuid4)
     apelido: str = Field(min_length=1)
     host: str = Field(default="localhost", min_length=1)
-    nome: str = Field(min_length=1)
+    nome: str | None = Field(default=None, min_length=1)
+    porta: int | None = Field(default=None, ge=1, le=65535)
     usuario: str = Field(min_length=1)
     # TODO: senha em texto puro -- tarefa #014
     senha: str = Field(min_length=1)
     pasta_dados: Path | None = None
     pasta_log: Path | None = None
+
+    @model_validator(mode="after")
+    def _conferir_nome_ou_porta(self) -> Self:
+        """Exige exatamente um entre o nome e a porta.
+
+        Raises:
+            InstanciaInvalidaError: Se os dois vieram preenchidos, ou nenhum.
+
+        """
+        if self.nome is not None and self.porta is not None:
+            motivo = "informe só um: o nome ou a porta"
+            raise InstanciaInvalidaError({"nome": motivo, "porta": motivo})
+
+        if self.nome is None and self.porta is None:
+            motivo = "informe o nome ou a porta"
+            raise InstanciaInvalidaError({"nome": motivo, "porta": motivo})
+
+        return self
 
 
 class ConfigInstancias(BakRestorerModel):
