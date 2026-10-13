@@ -3,7 +3,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from bakrestorer.features.instancias import DiagnosticoService, Instancia, InstanciasService, criar_service
+from bakrestorer.features.instancias import (
+    DiagnosticoService,
+    Instancia,
+    InstanciasService,
+    criar_diagnostico_service,
+    criar_instancias_service,
+)
 
 if TYPE_CHECKING:
     from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
@@ -24,7 +30,7 @@ def instancia_no_conteiner(criar_instancia: Callable[..., Instancia], instancia_
 @pytest.fixture
 def servico_de_diagnostico(cliente_sql_server: ClienteSqlServer) -> DiagnosticoService:
     """Serviço sob teste, falando com o contêiner."""
-    return DiagnosticoService(cliente_sql_server)
+    return criar_diagnostico_service(cliente_sql_server)
 
 
 @pytest.fixture
@@ -36,4 +42,4 @@ def caminho_da_config(tmp_path: Path) -> Path:
 @pytest.fixture
 def servico_de_instancias(caminho_da_config: Path) -> InstanciasService:
     """Serviço sob teste, apontado para um arquivo que ainda não foi gravado."""
-    return criar_service(caminho_da_config)
+    return criar_instancias_service(caminho_da_config)

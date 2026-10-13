@@ -2,7 +2,7 @@ from collections.abc import Callable
 from unittest.mock import MagicMock
 
 import pytest
-from bakrestorer.features.instancias import ConfigInstancias, DiagnosticoService, Instancia
+from bakrestorer.features.instancias import ConfigInstancias, DiagnosticoService, Instancia, criar_diagnostico_service
 from bakrestorer.infra.sqlserver import ClienteSqlServer
 
 
@@ -15,7 +15,7 @@ def cliente_sql_server() -> MagicMock:
 @pytest.fixture
 def servico_de_diagnostico(cliente_sql_server: MagicMock) -> DiagnosticoService:
     """Serviço sob teste, falando com o dublê do cliente."""
-    return DiagnosticoService(cliente_sql_server)
+    return criar_diagnostico_service(cliente_sql_server)
 
 
 @pytest.fixture

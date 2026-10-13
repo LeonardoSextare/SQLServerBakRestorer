@@ -10,7 +10,7 @@ from bakrestorer.features.instancias import (
     InstanciaJaExisteError,
     InstanciaNaoEncontradaError,
     InstanciasService,
-    criar_service,
+    criar_instancias_service,
 )
 from bakrestorer.infra.config_json import ArquivoCorrompidoError
 
@@ -41,7 +41,7 @@ class TestCarregar:
     ) -> None:
         gravado = servico_de_instancias.adicionar(criar_instancia("PROD"))
 
-        assert criar_service(caminho_da_config).carregar() == gravado
+        assert criar_instancias_service(caminho_da_config).carregar() == gravado
 
     def test_dado_um_cadastro_sem_nenhuma_instancia_quando_carregar_entao_a_resposta_nao_e_nula(
         self,
@@ -63,7 +63,7 @@ class TestCarregar:
         instancia = criar_instancia("Produção", pasta_dados=r"D:\dados", pasta_log=r"E:\log")
         gravado = servico_de_instancias.adicionar(instancia)
 
-        assert criar_service(caminho_da_config).carregar() == gravado
+        assert criar_instancias_service(caminho_da_config).carregar() == gravado
 
     @pytest.mark.parametrize(
         "gravado",
@@ -103,7 +103,7 @@ class TestSalvar:
         self,
         tmp_path: Path,
     ) -> None:
-        servico = criar_service(tmp_path / "ainda" / "nao" / "existe" / "config.json")
+        servico = criar_instancias_service(tmp_path / "ainda" / "nao" / "existe" / "config.json")
 
         servico.salvar(ConfigInstancias())
 
@@ -336,7 +336,7 @@ class TestDefinirPadrao:
 
         gravado = servico_de_instancias.definir_padrao(homolog.id)
 
-        assert criar_service(caminho_da_config).carregar() == gravado
+        assert criar_instancias_service(caminho_da_config).carregar() == gravado
 
     def test_dado_um_id_desconhecido_quando_defini_lo_como_padrao_entao_a_operacao_e_recusada(
         self,
