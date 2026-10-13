@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Self
+from uuid import UUID, uuid4
 
 from pydantic import Field, model_validator
 
@@ -12,11 +13,12 @@ class Instancia(BakRestorerModel):
 
     ERRO_DE_VALIDACAO = InstanciaInvalidaError
 
-    # TODO: senha em texto puro -- tarefa #014
-    alias: str = Field(min_length=1)
+    id: UUID = Field(default_factory=uuid4)
+    apelido: str = Field(min_length=1)
     host: str = Field(default="localhost", min_length=1)
     nome: str = Field(min_length=1)
     usuario: str = Field(min_length=1)
+    # TODO: senha em texto puro -- tarefa #014
     senha: str = Field(min_length=1)
     pasta_dados: Path | None = None
     pasta_log: Path | None = None
@@ -30,29 +32,41 @@ class ConfigInstancias(BakRestorerModel):
 
     ERRO_DE_VALIDACAO = CadastroInvalidoError
 
-    padrao: str | None = None
+    padrao: UUID | None = None
     itens: tuple[Instancia, ...] = ()
 
     @model_validator(mode="after")
     def _conferir_itens(self) -> Self:
         """Confere o que só faz sentido olhando a lista inteira.
 
+        O apelido continua único mesmo sem ser a identidade: é o nome que o
+        usuário vê, e duas instâncias com o mesmo nome confundiriam.
+
         Raises:
-            CadastroInvalidoError: Se um alias se repete, ou se `padrao` aponta
-                para um alias que não está na lista.
+            CadastroInvalidoError: Se um apelido ou um id se repete, ou se
+                `padrao` aponta para um id que não está na lista.
 
         """
-        aliases = [item.alias for item in self.itens]
-        repetidos = sorted({alias for alias in aliases if aliases.count(alias) > 1})
+        apelidos = [item.apelido for item in self.itens]
+        apelidos_repetidos = sorted({apelido for apelido in apelidos if apelidos.count(apelido) > 1})
 
-        if repetidos:
-            raise CadastroInvalidoError({"itens": f"alias repetido: {repetidos}"})
+        if apelidos_repetidos:
+            raise CadastroInvalidoError({"itens": f"apelido repetido: {apelidos_repetidos}"})
 
-        if self.padrao and self.padrao not in aliases:
+        ids = [item.id for item in self.itens]
+
+        if len(set(ids)) < len(ids):
+            raise CadastroInvalidoError({"itens": "id repetido"})
+
+        if self.padrao is not None and self.padrao not in ids:
             raise CadastroInvalidoError({"padrao": f"'{self.padrao}' não está entre as instâncias"})
 
         return self
 
-    def obter(self, alias: str) -> Instancia | None:
-        """Procura uma instância cadastrada pelo alias."""
-        return next((item for item in self.itens if item.alias == alias), None)
+    def obter(self, id_da_instancia: UUID) -> Instancia | None:
+        """Procura uma instância cadastrada pela identidade."""
+        return next((item for item in self.itens if item.id == id_da_instancia), None)
+
+    def obter_pelo_apelido(self, apelido: str) -> Instancia | None:
+        """Procura uma instância cadastrada pelo nome que o usuário vê."""
+        return next((item for item in self.itens if item.apelido == apelido), None)

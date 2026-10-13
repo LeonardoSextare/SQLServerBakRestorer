@@ -48,7 +48,7 @@ def formulario(
         controls=[
             ft.Text("Conexão", size=12, opacity=0.7),
             # TODO: o apelido trava na edição porque ele é a identidade -- tarefa #019
-            _campo_de_texto(view_model, "alias", "Apelido", ft.Icons.LABEL_OUTLINE, travado=editando, foco=True),
+            _campo_de_texto(view_model, "apelido", "Apelido", ft.Icons.LABEL_OUTLINE, travado=editando, foco=True),
             ft.Row(
                 controls=[
                     _campo_de_texto(view_model, "host", "Host", ft.Icons.DNS_OUTLINED),

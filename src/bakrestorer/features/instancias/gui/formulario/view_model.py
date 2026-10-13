@@ -7,11 +7,11 @@ import flet as ft
 
 from bakrestorer.features.instancias import Instancia, InstanciaInvalidaError, InstanciaJaExisteError
 
-type NomeDoCampo = Literal["alias", "host", "nome", "usuario", "senha", "pasta_dados", "pasta_log"]
+type NomeDoCampo = Literal["apelido", "host", "nome", "usuario", "senha", "pasta_dados", "pasta_log"]
 
 
 FORMULARIO_VAZIO: dict[NomeDoCampo, str] = {
-    "alias": "",
+    "apelido": "",
     "host": "",
     "nome": "",
     "usuario": "",
@@ -47,7 +47,7 @@ class FormularioViewModel:
         As pastas ficam vinculadas só se a instância já usa a mesma para as duas.
         """
         self.digitado = {
-            "alias": instancia.alias,
+            "apelido": instancia.apelido,
             "host": instancia.host,
             "nome": instancia.nome,
             "usuario": instancia.usuario,
@@ -106,7 +106,7 @@ class FormularioViewModel:
         try:
             gravar(instancia)
         except InstanciaJaExisteError:
-            self._recusar({"alias"}, "Já existe uma instância com esse apelido")
+            self._recusar({"apelido"}, "Já existe uma instância com esse apelido")
 
     def _recusar(self, campos: Collection[str], motivo: str) -> None:
         """Marca os campos que impediram o salvamento, todos com o mesmo motivo."""
@@ -126,7 +126,7 @@ class FormularioViewModel:
         pasta_log = self.digitado["pasta_log"].strip()
 
         return Instancia(
-            alias=self.digitado["alias"].strip(),
+            apelido=self.digitado["apelido"].strip(),
             host=self.digitado["host"].strip(),
             nome=self.digitado["nome"].strip(),
             usuario=self.digitado["usuario"].strip(),

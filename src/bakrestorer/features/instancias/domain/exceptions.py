@@ -16,14 +16,14 @@ class CadastroInvalidoError(ModelInvalidoError, InstanciasError):
 class InstanciaError(InstanciasError):
     """Falha ao alterar uma instância do cadastro."""
 
-    def __init__(self, alias: str) -> None:
-        super().__init__(alias)
-        self.alias = alias
+    def __init__(self, apelido: str) -> None:
+        super().__init__(apelido)
+        self.apelido = apelido
 
 
 class InstanciaNaoEncontradaError(InstanciaError):
-    """Nenhuma instância cadastrada usa esse alias."""
+    """Nenhuma instância cadastrada usa esse apelido."""
 
 
 class InstanciaJaExisteError(InstanciaError):
-    """Já existe uma instância cadastrada com esse alias."""
+    """Já existe uma instância cadastrada com esse apelido."""

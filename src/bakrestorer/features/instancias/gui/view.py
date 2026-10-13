@@ -85,7 +85,7 @@ def _cartoes_ou_convite(view_model: InstanciasViewModel) -> ft.Control:
         return _convite_para_cadastrar()
 
     cartoes = [
-        _cartao_da_instancia(view_model, instancia, padrao=instancia.alias == cadastro.padrao)
+        _cartao_da_instancia(view_model, instancia, padrao=instancia.apelido == cadastro.padrao)
         for instancia in cadastro.itens
     ]
     return ft.Column(controls=cartoes, spacing=3, scroll=ft.ScrollMode.AUTO, expand=True)
@@ -130,7 +130,7 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
         border_radius=20,
         tooltip="A instância que o aplicativo usa para ler os backups",
     )
-    nome = ft.Text(instancia.alias, size=15, weight=ft.FontWeight.W_500)
+    nome = ft.Text(instancia.apelido, size=15, weight=ft.FontWeight.W_500)
 
     menu = ft.PopupMenuButton(
         icon=ft.Icons.MORE_HORIZ,

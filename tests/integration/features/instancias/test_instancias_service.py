@@ -165,12 +165,12 @@ class TestAdicionar:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        for alias in ("PROD", "HOMOLOG", "DEV"):
-            cadastro = servico_de_instancias.adicionar(criar_instancia(alias))
+        for apelido in ("PROD", "HOMOLOG", "DEV"):
+            cadastro = servico_de_instancias.adicionar(criar_instancia(apelido))
 
-        assert [instancia.alias for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
+        assert [instancia.apelido for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
 
-    def test_dado_um_alias_ja_cadastrado_quando_adicionar_entao_a_operacao_e_recusada(
+    def test_dado_um_apelido_ja_cadastrado_quando_adicionar_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -180,9 +180,9 @@ class TestAdicionar:
         with pytest.raises(InstanciaJaExisteError) as falha:
             servico_de_instancias.adicionar(criar_instancia("PROD", senha="outra"))
 
-        assert falha.value.alias == "PROD"
+        assert falha.value.apelido == "PROD"
 
-    def test_dado_um_alias_ja_cadastrado_quando_adicionar_entao_nada_do_que_estava_gravado_muda(
+    def test_dado_um_apelido_ja_cadastrado_quando_adicionar_entao_nada_do_que_estava_gravado_muda(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -216,14 +216,14 @@ class TestAtualizar:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        for alias in ("PROD", "HOMOLOG", "DEV"):
-            servico_de_instancias.adicionar(criar_instancia(alias))
+        for apelido in ("PROD", "HOMOLOG", "DEV"):
+            servico_de_instancias.adicionar(criar_instancia(apelido))
 
         cadastro = servico_de_instancias.atualizar(criar_instancia("HOMOLOG", senha="nova"))
 
-        assert [instancia.alias for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
+        assert [instancia.apelido for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
 
-    def test_dado_um_alias_desconhecido_quando_atualizar_entao_a_operacao_e_recusada(
+    def test_dado_um_apelido_desconhecido_quando_atualizar_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -231,7 +231,7 @@ class TestAtualizar:
         with pytest.raises(InstanciaNaoEncontradaError) as falha:
             servico_de_instancias.atualizar(criar_instancia("FANTASMA"))
 
-        assert falha.value.alias == "FANTASMA"
+        assert falha.value.apelido == "FANTASMA"
 
 
 class TestRemover:
@@ -247,7 +247,7 @@ class TestRemover:
 
         cadastro = servico_de_instancias.remover("HOMOLOG")
 
-        assert ([instancia.alias for instancia in cadastro.itens], cadastro.padrao) == (["PROD"], "PROD")
+        assert ([instancia.apelido for instancia in cadastro.itens], cadastro.padrao) == (["PROD"], "PROD")
 
     def test_dada_a_instancia_padrao_com_outras_cadastradas_quando_remover_entao_o_cadastro_fica_sem_padrao(
         self,
@@ -259,7 +259,7 @@ class TestRemover:
 
         cadastro = servico_de_instancias.remover("PROD")
 
-        assert ([instancia.alias for instancia in cadastro.itens], cadastro.padrao) == (["HOMOLOG"], None)
+        assert ([instancia.apelido for instancia in cadastro.itens], cadastro.padrao) == (["HOMOLOG"], None)
 
     def test_dada_a_instancia_padrao_sendo_a_ultima_quando_remover_entao_o_cadastro_fica_sem_padrao(
         self,
@@ -272,7 +272,7 @@ class TestRemover:
 
         assert (cadastro.itens, cadastro.padrao) == ((), None)
 
-    def test_dado_um_alias_desconhecido_quando_remover_entao_a_operacao_e_recusada(
+    def test_dado_um_apelido_desconhecido_quando_remover_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
     ) -> None:
@@ -296,7 +296,7 @@ class TestDefinirPadrao:
 
         assert criar_service(caminho_da_config).carregar() == gravado
 
-    def test_dado_um_alias_desconhecido_quando_defini_lo_como_padrao_entao_a_operacao_e_recusada(
+    def test_dado_um_apelido_desconhecido_quando_defini_lo_como_padrao_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],

@@ -54,8 +54,8 @@ class InstanciasViewModel:
         da tela sem uma nova leitura do disco.
 
         Raises:
-            InstanciaJaExisteError: Se é cadastro novo e o alias já existe.
-            InstanciaNaoEncontradaError: Se é edição e o alias sumiu do cadastro.
+            InstanciaJaExisteError: Se é cadastro novo e o apelido já existe.
+            InstanciaNaoEncontradaError: Se é edição e o apelido sumiu do cadastro.
             ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
             ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
             CadastroInvalidoError: Se o gravado não corresponde ao formato.
@@ -77,7 +77,7 @@ class InstanciasViewModel:
         """Torna a instância a padrão: a que o aplicativo usa para ler os backups.
 
         Raises:
-            InstanciaNaoEncontradaError: Se o alias sumiu do cadastro.
+            InstanciaNaoEncontradaError: Se o apelido sumiu do cadastro.
             ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
             ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
             CadastroInvalidoError: Se o gravado não corresponde ao formato.
@@ -86,7 +86,7 @@ class InstanciasViewModel:
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
-        self.cadastro = instancias_service().definir_padrao(instancia.alias)
+        self.cadastro = instancias_service().definir_padrao(instancia.apelido)
 
     def remover(self, instancia: Instancia) -> None:
         """Tira a instância do cadastro.
@@ -94,7 +94,7 @@ class InstanciasViewModel:
         Remover a padrão deixa o cadastro sem padrão, até o usuário escolher outra.
 
         Raises:
-            InstanciaNaoEncontradaError: Se o alias sumiu do cadastro.
+            InstanciaNaoEncontradaError: Se o apelido sumiu do cadastro.
             ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
             ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
             CadastroInvalidoError: Se o gravado não corresponde ao formato.
@@ -103,4 +103,4 @@ class InstanciasViewModel:
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
-        self.cadastro = instancias_service().remover(instancia.alias)
+        self.cadastro = instancias_service().remover(instancia.apelido)
