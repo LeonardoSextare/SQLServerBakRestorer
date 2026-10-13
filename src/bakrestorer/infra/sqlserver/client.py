@@ -1,4 +1,5 @@
 from collections.abc import Iterable, Mapping
+from contextlib import suppress
 
 import pytds
 
@@ -95,18 +96,19 @@ class ClienteSqlServer:
             ComandoRecusadoError: Se a instância recusou ou falhou o comando.
 
         """
-        with self._sessao(conexao).cursor() as cursor:
-            try:
+        sessao = self._sessao(conexao)
+
+        try:
+            with sessao.cursor() as cursor:
                 cursor.execute(comando, dict(parametros) if parametros else None)
-            except pytds.DatabaseError as falha:
-                raise ComandoRecusadoError(conexao.servidor, str(falha)) from falha
-            except (pytds.Error, OSError) as falha:
-                raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
+                linhas = [] if cursor.description is None else list(cursor.fetchall())
+        except pytds.DatabaseError as falha:
+            raise ComandoRecusadoError(conexao.servidor, str(falha)) from falha
+        except (pytds.Error, OSError) as falha:
+            self.descartar(conexao)
+            raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
 
-            if cursor.description is None:
-                return []
-
-            return list(cursor.fetchall())
+        return linhas
 
     def executar_com_progresso(
         self,
@@ -130,19 +132,28 @@ class ClienteSqlServer:
         """
         raise NotImplementedError
 
-    def encerrar(self) -> None:
-        """Fecha todas as sessões abertas e esvazia o cache.
+    def descartar(self, conexao: Conexao) -> None:
+        """Fecha a sessão da instância e a esquece, quando houver uma.
 
-        Falha ao fechar é ignorada: a sessão morre junto com o processo, e não
-        há estado a preservar.
+        O próximo comando dirigido a ela faz login de novo. É o jeito de saber
+        se a credencial ainda vale: a sessão guardada só prova que valia quando
+        abriu.
+
+        Falha ao fechar é ignorada: a sessão já não serve, e não há estado a
+        preservar.
         """
-        for sessao in self._sessoes.values():
-            try:
-                sessao.close()
-            except pytds.Error:
-                continue
+        sessao = self._sessoes.pop(conexao, None)
 
-        self._sessoes.clear()
+        if sessao is None:
+            return
+
+        with suppress(pytds.Error):
+            sessao.close()
+
+    def encerrar(self) -> None:
+        """Fecha todas as sessões abertas e esvazia o cache."""
+        for conexao in list(self._sessoes):
+            self.descartar(conexao)
 
     def _sessao(self, conexao: Conexao) -> pytds.Connection:
         """Devolve a sessão da instância, abrindo-a quando ainda não houver.

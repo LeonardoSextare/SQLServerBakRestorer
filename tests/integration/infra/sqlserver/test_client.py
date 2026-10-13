@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pytest
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
@@ -132,6 +134,30 @@ class TestExecutar:
 
         assert cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero") == [{"numero": 1}]
 
+    def test_dada_uma_sessao_derrubada_quando_executar_entao_a_falha_e_de_instancia_inacessivel(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+        derrubar_sessao: Callable[[ClienteSqlServer], None],
+    ) -> None:
+        derrubar_sessao(cliente_sql_server)
+
+        with pytest.raises(InstanciaInacessivelError):
+            cliente_sql_server.executar(instancia_sql_server, "SELECT 1")
+
+    def test_dada_uma_sessao_derrubada_quando_executar_de_novo_entao_uma_sessao_nova_atende(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+        derrubar_sessao: Callable[[ClienteSqlServer], None],
+    ) -> None:
+        derrubar_sessao(cliente_sql_server)
+
+        with pytest.raises(InstanciaInacessivelError):
+            cliente_sql_server.executar(instancia_sql_server, "SELECT 1")
+
+        assert cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero") == [{"numero": 1}]
+
 
 class TestAquecer:
     """Cobre `aquecer`."""
@@ -150,6 +176,30 @@ class TestAquecer:
             }
         finally:
             cliente.encerrar()
+
+
+class TestDescartar:
+    """Cobre `descartar`."""
+
+    def test_dada_uma_sessao_aberta_quando_descartar_e_executar_de_novo_entao_o_estado_anterior_se_perdeu(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        cliente_sql_server.executar(instancia_sql_server, CRIAR_MARCA_NA_SESSAO)
+
+        cliente_sql_server.descartar(instancia_sql_server)
+
+        assert cliente_sql_server.executar(instancia_sql_server, PROCURAR_MARCA_NA_SESSAO) == [{"marca": None}]
+
+    def test_dada_uma_conexao_sem_sessao_quando_descartar_entao_nada_acontece(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        cliente_sql_server.descartar(instancia_sql_server)
+
+        assert cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero") == [{"numero": 1}]
 
 
 class TestEncerrar:

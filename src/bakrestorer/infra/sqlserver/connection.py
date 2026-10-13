@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Conexao(BaseModel):
@@ -23,6 +25,24 @@ class Conexao(BaseModel):
     porta: int | None = None
     usuario: str | None = None
     senha: str | None = None
+
+    @model_validator(mode="after")
+    def _conferir_instancia_ou_porta(self) -> Self:
+        """Recusa a instância nomeada e a porta juntas.
+
+        O nome só serve para o SQL Browser descobrir a porta, e o driver recusa
+        receber os dois. Sem nenhum, a conexão vai à instância padrão, na 1433.
+
+        Raises:
+            ValueError: Se a instância e a porta vieram juntas. O Pydantic
+                entrega como `ValidationError`.
+
+        """
+        if self.instancia is not None and self.porta is not None:
+            mensagem = "informe a instância ou a porta, não as duas"
+            raise ValueError(mensagem)
+
+        return self
 
     @property
     def servidor(self) -> str:

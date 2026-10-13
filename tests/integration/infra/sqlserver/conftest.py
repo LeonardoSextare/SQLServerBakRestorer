@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import pytest
 from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
@@ -34,6 +34,29 @@ def instancia_sql_server(request: pytest.FixtureRequest) -> Iterator[Conexao]:
         )
     finally:
         container.stop()
+
+
+@pytest.fixture
+def derrubar_sessao(instancia_sql_server: Conexao) -> Iterator[Callable[[ClienteSqlServer], None]]:
+    """Derruba, a partir de outra sessão, a sessão que um cliente mantém aberta.
+
+    É a instância caindo com a sessão aberta, sem parar o contêiner, que é o
+    mesmo para a suíte inteira.
+    """
+    outro_cliente = ClienteSqlServer()
+
+    def derrubar(cliente: ClienteSqlServer) -> None:
+        sessao = cliente.executar(instancia_sql_server, "SELECT @@SPID AS sessao")[0]["sessao"]
+        outro_cliente.executar(
+            instancia_sql_server,
+            "DECLARE @comando NVARCHAR(20) = CONCAT('KILL ', %(sessao)s); EXEC (@comando)",
+            {"sessao": sessao},
+        )
+
+    try:
+        yield derrubar
+    finally:
+        outro_cliente.encerrar()
 
 
 @pytest.fixture
