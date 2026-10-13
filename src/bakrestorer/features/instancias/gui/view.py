@@ -24,10 +24,18 @@ def secao_instancias() -> ft.Control:
 
     Com o formulário aberto, ele ocupa o lugar da lista, e a seta do cabeçalho
     volta para ela sem salvar. Quem decide qual dos dois aparece é o view model.
+
+    A confirmação de remover é pedida a cada desenho: o `use_dialog` mantém o
+    diálogo aberto enquanto recebe um, e fecha quando recebe None.
     """
     view_model, _ = ft.use_state(InstanciasViewModel())
 
     ft.use_effect(view_model.carregar, [])
+    ft.use_dialog(
+        _confirmacao_de_remocao(view_model, view_model.instancia_a_remover)
+        if view_model.instancia_a_remover is not None
+        else None,
+    )
 
     if view_model.formulario_aberto:
         return _painel_do_formulario(view_model)
@@ -85,7 +93,7 @@ def _cartoes_ou_convite(view_model: InstanciasViewModel) -> ft.Control:
         return _convite_para_cadastrar()
 
     cartoes = [
-        _cartao_da_instancia(view_model, instancia, padrao=instancia.apelido == cadastro.padrao)
+        _cartao_da_instancia(view_model, instancia, padrao=instancia.id == cadastro.padrao)
         for instancia in cadastro.itens
     ]
     return ft.Column(controls=cartoes, spacing=3, scroll=ft.ScrollMode.AUTO, expand=True)
@@ -153,7 +161,7 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
                 icon=ft.Icon(ft.Icons.DELETE_OUTLINE, size=19, color=ft.Colors.ERROR),
                 height=38,
                 padding=ft.Padding.symmetric(horizontal=14),
-                on_click=lambda _: view_model.remover(instancia),
+                on_click=lambda _: view_model.pedir_remocao(instancia),
             ),
         ],
     )
@@ -168,6 +176,64 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
             content_padding=ft.Padding.symmetric(horizontal=14, vertical=4),
             on_click=lambda _: view_model.abrir_edicao(instancia),
         ),
+    )
+
+
+def _confirmacao_de_remocao(view_model: InstanciasViewModel, instancia: Instancia) -> ft.AlertDialog:
+    """Desenha o diálogo que pede confirmação antes de tirar a instância do cadastro.
+
+    Além da pergunta, o texto diz o que não acontece: quem lê "remover
+    instância" pode achar que a instância ou os bancos somem do SQL Server.
+    """
+    pergunta = ft.Text(
+        spans=[
+            ft.TextSpan(text="Tem certeza de que deseja remover "),
+            ft.TextSpan(text=f'"{instancia.apelido}"', style=ft.TextStyle(color=ft.Colors.PRIMARY)),
+            ft.TextSpan(text=" da lista de instâncias?"),
+        ],
+        size=14,
+    )
+
+    return ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Remover instância", size=18, weight=ft.FontWeight.W_600),
+        content=ft.Column(
+            controls=[
+                ft.Column(
+                    controls=[
+                        pergunta,
+                        ft.Text("Nada será alterado no SQL Server.", size=14),
+                    ],
+                    spacing=2,
+                    tight=True,
+                ),
+                ft.Row(
+                    controls=[
+                        ft.Icon(ft.Icons.ERROR_OUTLINE, size=16, color=ft.Colors.ERROR),
+                        ft.Text(
+                            "Esta ação não pode ser desfeita.",
+                            size=14,
+                            weight=ft.FontWeight.W_600,
+                            color=ft.Colors.ERROR,
+                        ),
+                    ],
+                    spacing=6,
+                ),
+            ],
+            spacing=12,
+            tight=True,
+            width=420,
+        ),
+        actions=[
+            ft.TextButton(content="Cancelar", on_click=lambda _: view_model.cancelar_remocao()),
+            ft.FilledButton(
+                content="Remover",
+                style=ft.ButtonStyle(bgcolor=ft.Colors.ERROR, color=ft.Colors.ON_ERROR),
+                on_click=lambda _: view_model.confirmar_remocao(),
+            ),
+        ],
+        shape=ft.RoundedRectangleBorder(radius=20),
+        on_dismiss=lambda _: view_model.cancelar_remocao(),
     )
 
 

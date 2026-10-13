@@ -17,11 +17,17 @@ class InstanciasViewModel:
     `instancia_em_edicao` só tem valor com o formulário aberto: None ali quer dizer
     instância nova. Os métodos mudam os dois campos juntos, para nunca sobrar
     uma instância em edição com o formulário fechado.
+
+    Remover acontece em dois tempos: `pedir_remocao` só guarda em
+    `instancia_a_remover` qual instância o usuário quer tirar, e a tela pede a
+    confirmação enquanto ela estiver ali. Quem tira de fato é o
+    `confirmar_remocao`.
     """
 
     cadastro: ConfigInstancias | None = None
     formulario_aberto: bool = False
     instancia_em_edicao: Instancia | None = None
+    instancia_a_remover: Instancia | None = None
 
     def carregar(self) -> None:
         """Lê do disco o que está cadastrado.
@@ -77,7 +83,7 @@ class InstanciasViewModel:
         """Torna a instância a padrão: a que o aplicativo usa para ler os backups.
 
         Raises:
-            InstanciaNaoEncontradaError: Se o apelido sumiu do cadastro.
+            InstanciaNaoEncontradaError: Se a instância sumiu do cadastro.
             ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
             ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
             CadastroInvalidoError: Se o gravado não corresponde ao formato.
@@ -86,15 +92,23 @@ class InstanciasViewModel:
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
-        self.cadastro = instancias_service().definir_padrao(instancia.apelido)
+        self.cadastro = instancias_service().definir_padrao(instancia.id)
 
-    def remover(self, instancia: Instancia) -> None:
-        """Tira a instância do cadastro.
+    def pedir_remocao(self, instancia: Instancia) -> None:
+        """Guarda qual instância o usuário quer tirar, à espera da confirmação."""
+        self.instancia_a_remover = instancia
+
+    def cancelar_remocao(self) -> None:
+        """Desiste de tirar a instância, sem mexer no cadastro."""
+        self.instancia_a_remover = None
+
+    def confirmar_remocao(self) -> None:
+        """Tira do cadastro a instância que estava à espera da confirmação.
 
         Remover a padrão deixa o cadastro sem padrão, até o usuário escolher outra.
 
         Raises:
-            InstanciaNaoEncontradaError: Se o apelido sumiu do cadastro.
+            InstanciaNaoEncontradaError: Se a instância sumiu do cadastro.
             ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
             ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
             CadastroInvalidoError: Se o gravado não corresponde ao formato.
@@ -103,4 +117,8 @@ class InstanciasViewModel:
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
-        self.cadastro = instancias_service().remover(instancia.apelido)
+        if self.instancia_a_remover is None:
+            return
+
+        self.cadastro = instancias_service().remover(self.instancia_a_remover.id)
+        self.instancia_a_remover = None

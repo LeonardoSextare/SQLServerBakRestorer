@@ -53,12 +53,7 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["src/bakrestorer"]
-# A interface fica fora da cobertura enquanto não tiver teste
-omit = [
-    "src/bakrestorer/_versao.py",
-    "src/bakrestorer/desktop_shell/*",
-    "src/bakrestorer/features/*/gui/*",
-]
+omit = ["src/bakrestorer/_versao.py"]
 
 [tool.coverage.report]
 show_missing = true

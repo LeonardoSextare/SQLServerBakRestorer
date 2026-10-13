@@ -2,6 +2,7 @@ from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+from uuid import UUID, uuid4
 
 import flet as ft
 
@@ -35,11 +36,16 @@ class FormularioViewModel:
 
     Com `pastas_vinculadas`, digitar numa das pastas escreve igual na outra. O
     formulário nasce vinculado, porque as duas pastas começam vazias, e iguais.
+
+    `id_da_instancia` é sempre o de quem será gravado: o formulário novo nasce
+    com o de uma instância nova, e a edição troca pelo da instância editada.
+    Assim o salvar não precisa saber se é cadastro ou edição.
     """
 
     digitado: dict[NomeDoCampo, str] = field(default_factory=FORMULARIO_VAZIO.copy)
     recusas: dict[NomeDoCampo, str] = field(default_factory=dict)
     pastas_vinculadas: bool = True
+    id_da_instancia: UUID = field(default_factory=uuid4)
 
     def preencher_com(self, instancia: Instancia) -> None:
         """Copia para o formulário os dados de uma instância já cadastrada.
@@ -56,6 +62,7 @@ class FormularioViewModel:
             "pasta_log": str(instancia.pasta_log or ""),
         }
         self.pastas_vinculadas = instancia.pasta_dados == instancia.pasta_log
+        self.id_da_instancia = instancia.id
 
     def digitar(self, campo: NomeDoCampo, texto: str) -> None:
         """Guarda o que foi digitado num campo e tira a recusa dele.
@@ -126,6 +133,7 @@ class FormularioViewModel:
         pasta_log = self.digitado["pasta_log"].strip()
 
         return Instancia(
+            id=self.id_da_instancia,
             apelido=self.digitado["apelido"].strip(),
             host=self.digitado["host"].strip(),
             nome=self.digitado["nome"].strip(),
