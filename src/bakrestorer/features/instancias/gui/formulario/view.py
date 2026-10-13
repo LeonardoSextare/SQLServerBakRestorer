@@ -1,6 +1,5 @@
 import math
 from collections.abc import Callable
-from typing import Literal
 
 import flet as ft
 
@@ -14,7 +13,11 @@ def formulario(
     ao_salvar: Callable[[Instancia], None],
     ao_cancelar: Callable[[], None],
 ) -> ft.Control:
-    """Os campos de uma instância e, embaixo, o rodapé com Cancelar e Salvar.
+    """Os campos de uma instância e, embaixo, o rodapé com os botões.
+
+    No rodapé, Testar conexão fica sozinho à esquerda, longe de Cancelar e
+    Salvar: ele confere a instância, e não fecha o formulário. Por enquanto ele
+    só existe desabilitado -- o diagnóstico ainda não foi escrito.
 
     Não conhece quem o usa: recebe a instância em edição, ou None para uma
     nova, e as funções que gravam e que fecham. Assim serve em qualquer tela
@@ -71,11 +74,25 @@ def formulario(
 
     rodape = ft.Row(
         controls=[
-            ft.TextButton(content="Cancelar", on_click=lambda _: ao_cancelar()),
-            ft.FilledButton(content="Salvar", icon=ft.Icons.CHECK, on_click=lambda _: view_model.salvar(ao_salvar)),
+            ft.OutlinedButton(
+                content="Testar conexão",
+                icon=ft.Icons.NETWORK_CHECK,
+                disabled=True,
+                tooltip="Em breve",
+            ),
+            ft.Row(
+                controls=[
+                    ft.TextButton(content="Cancelar", on_click=lambda _: ao_cancelar()),
+                    ft.FilledButton(
+                        content="Salvar",
+                        icon=ft.Icons.CHECK,
+                        on_click=lambda _: view_model.salvar(ao_salvar),
+                    ),
+                ],
+                spacing=8,
+            ),
         ],
-        alignment=ft.MainAxisAlignment.END,
-        spacing=8,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
 
     return ft.Column(controls=[campos, rodape], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
@@ -107,8 +124,7 @@ def _campo_de_texto(
         dense=True,
         filled=True,
         fill_color=ft.Colors.with_opacity(0.06, ft.Colors.ON_SURFACE),
-        border_color=ft.Colors.TRANSPARENT,
-        border_radius=8,
+        border=ft.OutlineInputBorder(side=ft.BorderSide(color=ft.Colors.TRANSPARENT), border_radius=8),
         text_size=14,
         expand=True,
         on_change=lambda evento: view_model.digitar(campo, evento.control.value),
@@ -131,7 +147,9 @@ def _par_de_pastas(view_model: FormularioViewModel) -> ft.Control:
     vale naquele momento.
 
     Nada muda de tamanho no caminho: as linhas crescem dentro de um espaço fixo,
-    e o contorno só troca de cor. O ritmo é constante, e lento o bastante para
+    e o contorno só troca de cor. O contorno não recorta o campo: com raio na
+    borda, o `Container` recortaria por padrão, e cortaria o rótulo que sobe
+    acima do campo quando ele está preenchido. O ritmo é constante, e lento o bastante para
     o caminho curto das linhas ser visto.
     """
     vinculadas = view_model.pastas_vinculadas
@@ -152,6 +170,7 @@ def _par_de_pastas(view_model: FormularioViewModel) -> ft.Control:
             content=campo,
             border=ft.Border.all(1, cor_do_vinculo if contorno_visivel else ft.Colors.TRANSPARENT),
             border_radius=9,
+            clip_behavior=ft.ClipBehavior.NONE,
             animate=animacao_do_contorno,
             expand=True,
             on_animation_end=lambda _: concluir_desenho(),
