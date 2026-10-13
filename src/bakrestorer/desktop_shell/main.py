@@ -25,7 +25,7 @@ async def main(pagina: ft.Page) -> None:
     pagina.window.height = 470
     pagina.update()
 
-    # await pagina.window.center()
+    await pagina.window.center()
     pagina.window.visible = True
     pagina.update()
 
