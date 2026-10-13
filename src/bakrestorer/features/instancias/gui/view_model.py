@@ -72,3 +72,18 @@ class InstanciasViewModel:
             self.cadastro = service.atualizar(instancia)
 
         self.fechar_formulario()
+
+    def definir_padrao(self, instancia: Instancia) -> None:
+        """Torna a instância a padrão: a que o aplicativo usa para ler os backups.
+
+        Raises:
+            InstanciaNaoEncontradaError: Se o alias sumiu do cadastro.
+            ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
+            ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
+            CadastroInvalidoError: Se o gravado não corresponde ao formato.
+            InstanciaInvalidaError: Se uma das instâncias gravadas não
+                corresponde ao formato.
+            ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
+
+        """
+        self.cadastro = instancias_service().definir_padrao(instancia.alias)

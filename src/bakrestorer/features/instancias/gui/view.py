@@ -116,13 +116,47 @@ def _convite_para_cadastrar() -> ft.Control:
 
 
 def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, *, padrao: bool) -> ft.Control:
-    """Desenha o cartão de uma instância. Clicar nele abre a edição."""
+    """Desenha o cartão de uma instância. Clicar nele abre a edição.
+
+    A padrão leva o selo "Padrão" ao lado do nome. O menu fica em todos os
+    cartões, e é ali que moram as ações do cartão -- hoje só definir como
+    padrão, que fica desabilitado na que já é.
+    """
+    selo_de_padrao = ft.Container(
+        content=ft.Text("Padrão", size=10.5, weight=ft.FontWeight.W_600, color=ft.Colors.PRIMARY),
+        bgcolor=ft.Colors.with_opacity(0.12, ft.Colors.PRIMARY),
+        border=ft.Border.all(1, ft.Colors.with_opacity(0.35, ft.Colors.PRIMARY)),
+        padding=ft.Padding.symmetric(horizontal=7, vertical=1),
+        border_radius=20,
+        tooltip="A instância que o aplicativo usa para ler os backups",
+    )
+    nome = ft.Text(instancia.alias, size=15, weight=ft.FontWeight.W_500)
+
+    menu = ft.PopupMenuButton(
+        icon=ft.Icons.MORE_HORIZ,
+        icon_size=18,
+        tooltip="Mais opções",
+        menu_position=ft.PopupMenuPosition.UNDER,
+        menu_padding=ft.Padding.symmetric(vertical=6),
+        shape=ft.RoundedRectangleBorder(radius=10),
+        items=[
+            ft.PopupMenuItem(
+                content=ft.Text("Definir como padrão", size=14),
+                icon=ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, size=19),
+                height=38,
+                padding=ft.Padding.symmetric(horizontal=14),
+                disabled=padrao,
+                on_click=lambda _: view_model.definir_padrao(instancia),
+            ),
+        ],
+    )
+
     return ft.Card(
         content=ft.ListTile(
             leading=ft.Icon(ft.Icons.STORAGE, size=20, color=ft.Colors.PRIMARY),
-            title=ft.Text(instancia.alias, size=15, weight=ft.FontWeight.W_500),
+            title=ft.Row(controls=[nome, selo_de_padrao] if padrao else [nome], spacing=8, tight=True),
             subtitle=ft.Text(f"{instancia.nome} · {instancia.usuario}", size=13, opacity=0.7),
-            trailing=ft.Icon(ft.Icons.STAR, size=18, color=ft.Colors.PRIMARY) if padrao else None,
+            trailing=menu,
             min_height=62,
             content_padding=ft.Padding.symmetric(horizontal=14, vertical=4),
             on_click=lambda _: view_model.abrir_edicao(instancia),
