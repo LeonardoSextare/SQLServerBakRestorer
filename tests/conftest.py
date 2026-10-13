@@ -8,9 +8,9 @@ from bakrestorer.features.instancias import Instancia
 def criar_instancia() -> Callable[..., Instancia]:
     """Monta instâncias válidas, e é compartilhada porque `unit` e `integration` precisam dela."""
 
-    def montar(alias: str = "PROD", **campos: object) -> Instancia:
+    def montar(apelido: str = "PROD", **campos: object) -> Instancia:
         padroes = {"nome": "SQLEXPRESS", "usuario": "sa", "senha": "segredo"}
 
-        return Instancia.model_validate({"alias": alias, **padroes, **campos})
+        return Instancia.model_validate({"apelido": apelido, **padroes, **campos})
 
     return montar

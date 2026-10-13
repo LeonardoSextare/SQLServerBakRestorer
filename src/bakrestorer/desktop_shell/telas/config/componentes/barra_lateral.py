@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import flet as ft
 
-from bakrestorer.desktop_shell.telas.config.estado import EstadoConfig, Secao
+from bakrestorer.desktop_shell.telas.config.view_model import ConfigViewModel, Secao
 
 
 @dataclass(frozen=True)
@@ -33,7 +33,7 @@ TAMANHO_DO_ITEM = 76
 
 
 @ft.component
-def barra_lateral(estado: EstadoConfig) -> ft.Control:
+def barra_lateral(view_model: ConfigViewModel) -> ft.Control:
     """Deixa o usuário andar entre as partes da configuração.
 
     Usa o `NavigationRail`, o componente do Material para navegação lateral,
@@ -41,7 +41,7 @@ def barra_lateral(estado: EstadoConfig) -> ft.Control:
     navegação por teclado.
 
     Args:
-        estado: O que a tela de configuração sabe.
+        view_model: O que a tela de configuração sabe.
 
     Returns:
         A barra lateral.
@@ -59,9 +59,9 @@ def barra_lateral(estado: EstadoConfig) -> ft.Control:
     return ft.Container(
         content=ft.Column(
             controls=[
-                _navigation_rail(estado, DESTINOS_DO_TOPO, expandir=True),
+                _navigation_rail(view_model, DESTINOS_DO_TOPO, expandir=True),
                 ft.Divider(height=1),
-                _navigation_rail(estado, DESTINOS_DO_FIM, expandir=False),
+                _navigation_rail(view_model, DESTINOS_DO_FIM, expandir=False),
             ],
             spacing=0,
             expand=True,
@@ -71,11 +71,11 @@ def barra_lateral(estado: EstadoConfig) -> ft.Control:
     )
 
 
-def _navigation_rail(estado: EstadoConfig, destinos: tuple[Destino, ...], *, expandir: bool) -> ft.Control:
+def _navigation_rail(view_model: ConfigViewModel, destinos: tuple[Destino, ...], *, expandir: bool) -> ft.Control:
     """Monta um grupo de destinos como um rail.
 
     Args:
-        estado: O que a tela de configuração sabe.
+        view_model: O que a tela de configuração sabe.
         destinos: As partes deste grupo, na ordem em que aparecem.
         expandir: Se este rail ocupa a altura que sobrar. Quando não ocupa,
             recebe altura fixa: o rail não desenha com altura ilimitada.
@@ -91,10 +91,10 @@ def _navigation_rail(estado: EstadoConfig, destinos: tuple[Destino, ...], *, exp
         grupo, e aí este rail fica sem destaque nenhum.
 
     """
-    selecionado = next((indice for indice, destino in enumerate(destinos) if destino.secao is estado.secao), None)
+    selecionado = next((indice for indice, destino in enumerate(destinos) if destino.secao is view_model.secao), None)
 
     def ao_escolher(evento: ft.Event[ft.NavigationRail]) -> None:
-        estado.mostrar(destinos[evento.control.selected_index or 0].secao)
+        view_model.mostrar(destinos[evento.control.selected_index or 0].secao)
 
     return ft.NavigationRail(
         selected_index=selecionado,

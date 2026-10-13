@@ -3,8 +3,7 @@ from pathlib import Path
 
 from bakrestorer.features.instancias import InstanciasService, criar_service
 
-# TODO: Caminho fixo, só para desenvolver -- ver
-# .claude/tarefas/caminho-da-configuracao-hardcoded.md
+# TODO: Caminho fixo, só para desenvolver -- tarefa #002
 RAIZ_DO_PROJETO = Path(__file__).resolve().parents[2]
 CAMINHO_DA_CONFIGURACAO = RAIZ_DO_PROJETO / "config" / "config.json"
 

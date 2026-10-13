@@ -21,9 +21,9 @@ class TestExecutar:
         cliente_sql_server: ClienteSqlServer,
         instancia_sql_server: Conexao,
     ) -> None:
-        linhas = cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero, 'PROD' AS alias")
+        linhas = cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero, 'PROD' AS apelido")
 
-        assert linhas == [{"numero": 1, "alias": "PROD"}]
+        assert linhas == [{"numero": 1, "apelido": "PROD"}]
 
     def test_dado_um_comando_sem_resultado_quando_executar_entao_a_lista_volta_vazia(
         self,
@@ -39,11 +39,11 @@ class TestExecutar:
     ) -> None:
         linhas = cliente_sql_server.executar(
             instancia_sql_server,
-            "SELECT %(alias)s AS alias, %(porta)s AS porta",
-            {"alias": "Produção", "porta": 1433},
+            "SELECT %(apelido)s AS apelido, %(porta)s AS porta",
+            {"apelido": "Produção", "porta": 1433},
         )
 
-        assert linhas == [{"alias": "Produção", "porta": 1433}]
+        assert linhas == [{"apelido": "Produção", "porta": 1433}]
 
     def test_dado_o_mesmo_parametro_repetido_quando_executar_entao_basta_informa_lo_uma_vez(
         self,
@@ -52,8 +52,8 @@ class TestExecutar:
     ) -> None:
         linhas = cliente_sql_server.executar(
             instancia_sql_server,
-            "SELECT %(alias)s AS primeiro, %(alias)s AS segundo",
-            {"alias": "PROD"},
+            "SELECT %(apelido)s AS primeiro, %(apelido)s AS segundo",
+            {"apelido": "PROD"},
         )
 
         assert linhas == [{"primeiro": "PROD", "segundo": "PROD"}]
@@ -65,8 +65,8 @@ class TestExecutar:
     ) -> None:
         linhas = cliente_sql_server.executar(
             instancia_sql_server,
-            "SELECT CASE WHEN %(alias)s LIKE 'PR%%' THEN 1 ELSE 0 END AS comeca_com_pr",
-            {"alias": "PROD"},
+            "SELECT CASE WHEN %(apelido)s LIKE 'PR%%' THEN 1 ELSE 0 END AS comeca_com_pr",
+            {"apelido": "PROD"},
         )
 
         assert linhas == [{"comeca_com_pr": 1}]

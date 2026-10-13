@@ -9,7 +9,8 @@ def criar_cadastro(criar_instancia: Callable[..., Instancia]) -> Callable[..., C
     """Monta cadastros válidos, com uma instância `PROD` que também é a padrão."""
 
     def montar(**campos: object) -> ConfigInstancias:
-        padroes: dict[str, object] = {"itens": (criar_instancia("PROD"),), "padrao": "PROD"}
+        prod = criar_instancia("PROD")
+        padroes: dict[str, object] = {"itens": (prod,), "padrao": prod.id}
 
         return ConfigInstancias.model_validate({**padroes, **campos})
 

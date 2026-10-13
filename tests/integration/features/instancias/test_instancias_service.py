@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from bakrestorer.features.instancias import (
@@ -47,8 +48,9 @@ class TestCarregar:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD"))
-        servico_de_instancias.remover("PROD")
+        prod = criar_instancia("PROD")
+        servico_de_instancias.adicionar(prod)
+        servico_de_instancias.remover(prod.id)
 
         assert servico_de_instancias.carregar() == ConfigInstancias()
 
@@ -139,16 +141,19 @@ class TestAdicionar:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        assert servico_de_instancias.adicionar(criar_instancia("PROD")).padrao == "PROD"
+        prod = criar_instancia("PROD")
+
+        assert servico_de_instancias.adicionar(prod).padrao == prod.id
 
     def test_dada_uma_padrao_ja_escolhida_quando_adicionar_outra_entao_a_padrao_nao_muda(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD"))
+        prod = criar_instancia("PROD")
+        servico_de_instancias.adicionar(prod)
 
-        assert servico_de_instancias.adicionar(criar_instancia("HOMOLOG")).padrao == "PROD"
+        assert servico_de_instancias.adicionar(criar_instancia("HOMOLOG")).padrao == prod.id
 
     def test_dado_um_cadastro_sem_padrao_quando_adicionar_entao_a_nova_assume(
         self,
@@ -157,20 +162,21 @@ class TestAdicionar:
         criar_instancia: Callable[..., Instancia],
     ) -> None:
         caminho_da_config.write_text('{"instancias": {"padrao": null, "itens": []}}', encoding="utf-8")
+        prod = criar_instancia("PROD")
 
-        assert servico_de_instancias.adicionar(criar_instancia("PROD")).padrao == "PROD"
+        assert servico_de_instancias.adicionar(prod).padrao == prod.id
 
     def test_dadas_varias_instancias_quando_adicionar_entao_a_ordem_de_criacao_e_mantida(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        for alias in ("PROD", "HOMOLOG", "DEV"):
-            cadastro = servico_de_instancias.adicionar(criar_instancia(alias))
+        for apelido in ("PROD", "HOMOLOG", "DEV"):
+            cadastro = servico_de_instancias.adicionar(criar_instancia(apelido))
 
-        assert [instancia.alias for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
+        assert [instancia.apelido for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
 
-    def test_dado_um_alias_ja_cadastrado_quando_adicionar_entao_a_operacao_e_recusada(
+    def test_dado_um_apelido_ja_cadastrado_quando_adicionar_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -180,9 +186,9 @@ class TestAdicionar:
         with pytest.raises(InstanciaJaExisteError) as falha:
             servico_de_instancias.adicionar(criar_instancia("PROD", senha="outra"))
 
-        assert falha.value.alias == "PROD"
+        assert falha.value.apelido == "PROD"
 
-    def test_dado_um_alias_ja_cadastrado_quando_adicionar_entao_nada_do_que_estava_gravado_muda(
+    def test_dado_um_apelido_ja_cadastrado_quando_adicionar_entao_nada_do_que_estava_gravado_muda(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -203,35 +209,66 @@ class TestAtualizar:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD", senha="antiga"))
+        original = criar_instancia("PROD", senha="antiga")
+        servico_de_instancias.adicionar(original)
 
-        atualizada = criar_instancia("PROD", senha="nova")
+        atualizada = criar_instancia("PROD", id=original.id, senha="nova")
 
         cadastro = servico_de_instancias.atualizar(atualizada)
 
-        assert cadastro.obter("PROD") == atualizada
+        assert cadastro.obter(original.id) == atualizada
 
     def test_dada_uma_instancia_no_meio_da_lista_quando_atualizar_entao_a_posicao_dela_e_mantida(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        for alias in ("PROD", "HOMOLOG", "DEV"):
-            servico_de_instancias.adicionar(criar_instancia(alias))
+        homolog = criar_instancia("HOMOLOG")
 
-        cadastro = servico_de_instancias.atualizar(criar_instancia("HOMOLOG", senha="nova"))
+        for instancia in (criar_instancia("PROD"), homolog, criar_instancia("DEV")):
+            servico_de_instancias.adicionar(instancia)
 
-        assert [instancia.alias for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
+        cadastro = servico_de_instancias.atualizar(criar_instancia("HOMOLOG", id=homolog.id, senha="nova"))
 
-    def test_dado_um_alias_desconhecido_quando_atualizar_entao_a_operacao_e_recusada(
+        assert [instancia.apelido for instancia in cadastro.itens] == ["PROD", "HOMOLOG", "DEV"]
+
+    def test_dada_uma_instancia_renomeada_quando_atualizar_entao_o_apelido_novo_e_gravado_e_ela_segue_a_padrao(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        with pytest.raises(InstanciaNaoEncontradaError) as falha:
-            servico_de_instancias.atualizar(criar_instancia("FANTASMA"))
+        prod = criar_instancia("PROD")
+        servico_de_instancias.adicionar(prod)
 
-        assert falha.value.alias == "FANTASMA"
+        cadastro = servico_de_instancias.atualizar(criar_instancia("PRODUCAO", id=prod.id))
+
+        assert ([instancia.apelido for instancia in cadastro.itens], cadastro.padrao) == (["PRODUCAO"], prod.id)
+
+    def test_dado_o_apelido_de_outra_instancia_quando_atualizar_entao_a_operacao_e_recusada(
+        self,
+        servico_de_instancias: InstanciasService,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        servico_de_instancias.adicionar(criar_instancia("PROD"))
+        homolog = criar_instancia("HOMOLOG")
+        servico_de_instancias.adicionar(homolog)
+
+        with pytest.raises(InstanciaJaExisteError) as falha:
+            servico_de_instancias.atualizar(criar_instancia("PROD", id=homolog.id))
+
+        assert falha.value.apelido == "PROD"
+
+    def test_dado_um_id_desconhecido_quando_atualizar_entao_a_operacao_e_recusada(
+        self,
+        servico_de_instancias: InstanciasService,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        fantasma = criar_instancia("FANTASMA")
+
+        with pytest.raises(InstanciaNaoEncontradaError) as falha:
+            servico_de_instancias.atualizar(fantasma)
+
+        assert falha.value.id_da_instancia == fantasma.id
 
 
 class TestRemover:
@@ -242,42 +279,46 @@ class TestRemover:
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD"))
-        servico_de_instancias.adicionar(criar_instancia("HOMOLOG"))
+        prod = criar_instancia("PROD")
+        homolog = criar_instancia("HOMOLOG")
+        servico_de_instancias.adicionar(prod)
+        servico_de_instancias.adicionar(homolog)
 
-        cadastro = servico_de_instancias.remover("HOMOLOG")
+        cadastro = servico_de_instancias.remover(homolog.id)
 
-        assert ([instancia.alias for instancia in cadastro.itens], cadastro.padrao) == (["PROD"], "PROD")
+        assert ([instancia.apelido for instancia in cadastro.itens], cadastro.padrao) == (["PROD"], prod.id)
 
     def test_dada_a_instancia_padrao_com_outras_cadastradas_quando_remover_entao_o_cadastro_fica_sem_padrao(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD"))
+        prod = criar_instancia("PROD")
+        servico_de_instancias.adicionar(prod)
         servico_de_instancias.adicionar(criar_instancia("HOMOLOG"))
 
-        cadastro = servico_de_instancias.remover("PROD")
+        cadastro = servico_de_instancias.remover(prod.id)
 
-        assert ([instancia.alias for instancia in cadastro.itens], cadastro.padrao) == (["HOMOLOG"], None)
+        assert ([instancia.apelido for instancia in cadastro.itens], cadastro.padrao) == (["HOMOLOG"], None)
 
     def test_dada_a_instancia_padrao_sendo_a_ultima_quando_remover_entao_o_cadastro_fica_sem_padrao(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        servico_de_instancias.adicionar(criar_instancia("PROD"))
+        prod = criar_instancia("PROD")
+        servico_de_instancias.adicionar(prod)
 
-        cadastro = servico_de_instancias.remover("PROD")
+        cadastro = servico_de_instancias.remover(prod.id)
 
         assert (cadastro.itens, cadastro.padrao) == ((), None)
 
-    def test_dado_um_alias_desconhecido_quando_remover_entao_a_operacao_e_recusada(
+    def test_dado_um_id_desconhecido_quando_remover_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
     ) -> None:
         with pytest.raises(InstanciaNaoEncontradaError):
-            servico_de_instancias.remover("FANTASMA")
+            servico_de_instancias.remover(uuid4())
 
 
 class TestDefinirPadrao:
@@ -289,14 +330,15 @@ class TestDefinirPadrao:
         caminho_da_config: Path,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
+        homolog = criar_instancia("HOMOLOG")
         servico_de_instancias.adicionar(criar_instancia("PROD"))
-        servico_de_instancias.adicionar(criar_instancia("HOMOLOG"))
+        servico_de_instancias.adicionar(homolog)
 
-        gravado = servico_de_instancias.definir_padrao("HOMOLOG")
+        gravado = servico_de_instancias.definir_padrao(homolog.id)
 
         assert criar_service(caminho_da_config).carregar() == gravado
 
-    def test_dado_um_alias_desconhecido_quando_defini_lo_como_padrao_entao_a_operacao_e_recusada(
+    def test_dado_um_id_desconhecido_quando_defini_lo_como_padrao_entao_a_operacao_e_recusada(
         self,
         servico_de_instancias: InstanciasService,
         criar_instancia: Callable[..., Instancia],
@@ -304,4 +346,4 @@ class TestDefinirPadrao:
         servico_de_instancias.adicionar(criar_instancia("PROD"))
 
         with pytest.raises(InstanciaNaoEncontradaError):
-            servico_de_instancias.definir_padrao("FANTASMA")
+            servico_de_instancias.definir_padrao(uuid4())

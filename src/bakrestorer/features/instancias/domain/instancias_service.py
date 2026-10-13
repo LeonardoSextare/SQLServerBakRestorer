@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from bakrestorer.features.instancias.domain.exceptions import (
     InstanciaJaExisteError,
     InstanciaNaoEncontradaError,
@@ -60,63 +62,72 @@ class InstanciasService:
         Ela vira a padrão quando ainda não há uma escolhida.
 
         Raises:
-            InstanciaJaExisteError: Se o alias já está cadastrado.
+            InstanciaJaExisteError: Se outra instância já usa esse apelido.
             CadastroInvalidoError: Se o que estava gravado não corresponde ao formato.
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
         cadastro = self.carregar()
 
-        if cadastro.obter(instancia.alias) is not None:
-            raise InstanciaJaExisteError(instancia.alias)
+        if cadastro.obter_pelo_apelido(instancia.apelido) is not None:
+            raise InstanciaJaExisteError(instancia.apelido)
 
         with cadastro.alterando() as rascunho:
             rascunho.itens = (*rascunho.itens, instancia)
-            rascunho.padrao = rascunho.padrao or instancia.alias
+            rascunho.padrao = rascunho.padrao or instancia.id
 
         return self.salvar(cadastro)
 
     def atualizar(self, instancia: Instancia) -> ConfigInstancias:
         """Substitui uma instância cadastrada, mantendo a posição dela na lista.
 
+        A instância é achada pelo id, e por isso o apelido pode mudar: só não
+        pode ser o de outra instância.
+
         Raises:
-            InstanciaNaoEncontradaError: Se o alias não está cadastrado.
+            InstanciaNaoEncontradaError: Se nenhuma instância tem esse id.
+            InstanciaJaExisteError: Se o apelido novo já é de outra instância.
             CadastroInvalidoError: Se o que estava gravado não corresponde ao formato.
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
         cadastro = self.carregar()
 
-        if cadastro.obter(instancia.alias) is None:
-            raise InstanciaNaoEncontradaError(instancia.alias)
+        if cadastro.obter(instancia.id) is None:
+            raise InstanciaNaoEncontradaError(instancia.id)
+
+        dona_do_apelido = cadastro.obter_pelo_apelido(instancia.apelido)
+
+        if dona_do_apelido is not None and dona_do_apelido.id != instancia.id:
+            raise InstanciaJaExisteError(instancia.apelido)
 
         cadastro.itens = tuple(
             instancia
-            if cadastrada.alias == instancia.alias else cadastrada
+            if cadastrada.id == instancia.id else cadastrada
             for cadastrada in cadastro.itens
         )  # fmt: off
 
         return self.salvar(cadastro)
 
-    def remover(self, alias: str) -> ConfigInstancias:
+    def remover(self, id_da_instancia: UUID) -> ConfigInstancias:
         """Remove uma instância cadastrada.
 
         Remover a que era a padrão deixa o cadastro sem padrão: eleger uma
         sucessora é escolha do usuário, e não do serviço.
 
         Raises:
-            InstanciaNaoEncontradaError: Se nenhuma instância usa esse alias.
+            InstanciaNaoEncontradaError: Se nenhuma instância tem esse id.
             CadastroInvalidoError: Se o que estava gravado não corresponde ao formato.
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
         cadastro = self.carregar()
 
-        if cadastro.obter(alias) is None:
-            raise InstanciaNaoEncontradaError(alias)
+        if cadastro.obter(id_da_instancia) is None:
+            raise InstanciaNaoEncontradaError(id_da_instancia)
 
-        restantes = tuple(cadastrada for cadastrada in cadastro.itens if cadastrada.alias != alias)
-        padrao = None if cadastro.padrao == alias else cadastro.padrao
+        restantes = tuple(cadastrada for cadastrada in cadastro.itens if cadastrada.id != id_da_instancia)
+        padrao = None if cadastro.padrao == id_da_instancia else cadastro.padrao
 
         with cadastro.alterando() as rascunho:
             rascunho.itens = restantes
@@ -124,20 +135,20 @@ class InstanciasService:
 
         return self.salvar(cadastro)
 
-    def definir_padrao(self, alias: str) -> ConfigInstancias:
-        """Escolhe qual instância é usada quando nenhuma é informada.
+    def definir_padrao(self, id_da_instancia: UUID) -> ConfigInstancias:
+        """Escolhe a instância padrão: a que o aplicativo usa para ler os backups.
 
         Raises:
-            InstanciaNaoEncontradaError: Se nenhuma instância usa esse alias.
+            InstanciaNaoEncontradaError: Se nenhuma instância tem esse id.
             CadastroInvalidoError: Se o que estava gravado não corresponde ao formato.
             ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
 
         """
         cadastro = self.carregar()
 
-        if cadastro.obter(alias) is None:
-            raise InstanciaNaoEncontradaError(alias)
+        if cadastro.obter(id_da_instancia) is None:
+            raise InstanciaNaoEncontradaError(id_da_instancia)
 
-        cadastro.padrao = alias
+        cadastro.padrao = id_da_instancia
 
         return self.salvar(cadastro)

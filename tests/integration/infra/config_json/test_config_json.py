@@ -28,7 +28,7 @@ class TestLer:
     @pytest.mark.parametrize(
         ("gravado", "esperado"),
         [
-            ('{"instancias": {"alias": "PROD"}}', {"alias": "PROD"}),
+            ('{"instancias": {"apelido": "PROD"}}', {"apelido": "PROD"}),
             ('{"instancias": [1, 2, 3]}', [1, 2, 3]),
             ('{"instancias": 42}', 42),
             ('{"instancias": "texto"}', "texto"),
@@ -51,15 +51,15 @@ class TestLer:
         config_de_instancias: ConfigJson,
         caminho_do_arquivo: Path,
     ) -> None:
-        caminho_do_arquivo.write_text('{"instancias": {"alias": "Produção"}}', encoding="utf-8")
+        caminho_do_arquivo.write_text('{"instancias": {"apelido": "Produção"}}', encoding="utf-8")
 
-        assert config_de_instancias.ler() == {"alias": "Produção"}
+        assert config_de_instancias.ler() == {"apelido": "Produção"}
 
     def test_dada_uma_secao_ausente_no_arquivo_quando_ler_entao_a_resposta_e_nada(
         self,
         caminho_do_arquivo: Path,
     ) -> None:
-        caminho_do_arquivo.write_text('{"instancias": {"alias": "PROD"}}', encoding="utf-8")
+        caminho_do_arquivo.write_text('{"instancias": {"apelido": "PROD"}}', encoding="utf-8")
 
         assert ConfigJson(caminho_do_arquivo, "automacao").ler() is None
 
@@ -134,19 +134,19 @@ class TestGravar:
         self,
         config_de_instancias: ConfigJson,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
 
-        assert config_de_instancias.ler() == {"alias": "PROD"}
+        assert config_de_instancias.ler() == {"apelido": "PROD"}
 
     def test_dada_a_secao_vizinha_ja_gravada_quando_gravar_entao_ela_sobrevive(
         self,
         config_de_instancias: ConfigJson,
         config_de_gui: ConfigJson,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
         config_de_gui.gravar({"tema": "escuro"})
 
-        config_de_instancias.gravar({"alias": "HOMOLOG"})
+        config_de_instancias.gravar({"apelido": "HOMOLOG"})
 
         assert config_de_gui.ler() == {"tema": "escuro"}
 
@@ -154,18 +154,18 @@ class TestGravar:
         self,
         config_de_instancias: ConfigJson,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
 
-        config_de_instancias.gravar({"alias": "HOMOLOG"})
+        config_de_instancias.gravar({"apelido": "HOMOLOG"})
 
-        assert config_de_instancias.ler() == {"alias": "HOMOLOG"}
+        assert config_de_instancias.ler() == {"apelido": "HOMOLOG"}
 
     def test_dado_um_texto_com_acento_quando_gravar_entao_o_arquivo_sai_em_utf8_sem_escape(
         self,
         config_de_instancias: ConfigJson,
         caminho_do_arquivo: Path,
     ) -> None:
-        config_de_instancias.gravar({"alias": "Produção"})
+        config_de_instancias.gravar({"apelido": "Produção"})
 
         assert "Produção" in caminho_do_arquivo.read_text(encoding="utf-8")
 
@@ -175,16 +175,16 @@ class TestGravar:
     ) -> None:
         config_em_pasta_funda = ConfigJson(tmp_path / "ainda" / "nao" / "existe" / "config.json", "instancias")
 
-        config_em_pasta_funda.gravar({"alias": "PROD"})
+        config_em_pasta_funda.gravar({"apelido": "PROD"})
 
-        assert config_em_pasta_funda.ler() == {"alias": "PROD"}
+        assert config_em_pasta_funda.ler() == {"apelido": "PROD"}
 
     def test_dado_um_caminho_livre_quando_gravar_entao_nenhum_temporario_sobra(
         self,
         config_de_instancias: ConfigJson,
         caminho_do_arquivo: Path,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
 
         assert [arquivo.name for arquivo in caminho_do_arquivo.parent.iterdir()] == ["config.json"]
 
@@ -194,7 +194,7 @@ class TestGravar:
         caminho_do_arquivo: Path,
     ) -> None:
         with pytest.raises(ArquivoNaoGravavelError) as falha:
-            config_de_instancias.gravar({"alias": object()})
+            config_de_instancias.gravar({"apelido": object()})
 
         assert falha.value.caminho == caminho_do_arquivo
 
@@ -212,12 +212,12 @@ class TestGravar:
         self,
         config_de_instancias: ConfigJson,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
 
         with pytest.raises(ArquivoNaoGravavelError):
-            config_de_instancias.gravar({"alias": object()})
+            config_de_instancias.gravar({"apelido": object()})
 
-        assert config_de_instancias.ler() == {"alias": "PROD"}
+        assert config_de_instancias.ler() == {"apelido": "PROD"}
 
     def test_dado_arquivo_corrompido_quando_gravar_entao_a_gravacao_e_recusada_sem_apagar_nada(
         self,
@@ -227,7 +227,7 @@ class TestGravar:
         caminho_do_arquivo.write_text("nao sou json", encoding="utf-8")
 
         with pytest.raises(ArquivoCorrompidoError):
-            config_de_instancias.gravar({"alias": "PROD"})
+            config_de_instancias.gravar({"apelido": "PROD"})
 
         assert caminho_do_arquivo.read_text(encoding="utf-8") == "nao sou json"
 
@@ -239,7 +239,7 @@ class TestGravar:
         ocupado.write_text("nao sou pasta", encoding="utf-8")
 
         with pytest.raises(ArquivoNaoGravavelError):
-            ConfigJson(ocupado / "config.json", "instancias").gravar({"alias": "PROD"})
+            ConfigJson(ocupado / "config.json", "instancias").gravar({"apelido": "PROD"})
 
     def test_dado_que_o_destino_e_uma_pasta_quando_gravar_entao_nenhum_temporario_sobra(
         self,
@@ -249,7 +249,7 @@ class TestGravar:
         destino_ocupado_por_pasta.mkdir()
 
         with pytest.raises(ArquivoNaoGravavelError):
-            ConfigJson(destino_ocupado_por_pasta, "instancias").gravar({"alias": "PROD"})
+            ConfigJson(destino_ocupado_por_pasta, "instancias").gravar({"apelido": "PROD"})
 
         assert [arquivo.name for arquivo in tmp_path.iterdir()] == ["config.json"]
 
@@ -287,11 +287,11 @@ class TestFormatoGravado:
         config_de_gui: ConfigJson,
         caminho_do_arquivo: Path,
     ) -> None:
-        config_de_instancias.gravar({"alias": "PROD"})
+        config_de_instancias.gravar({"apelido": "PROD"})
         config_de_gui.gravar({"tema": "escuro"})
 
         assert caminho_do_arquivo.read_text(encoding="utf-8") == json.dumps(
-            {"instancias": {"alias": "PROD"}, "gui": {"tema": "escuro"}},
+            {"instancias": {"apelido": "PROD"}, "gui": {"tema": "escuro"}},
             indent=2,
             ensure_ascii=False,
         )

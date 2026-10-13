@@ -15,11 +15,11 @@ class Tela(Enum):
 
 @ft.observable
 @dataclass
-class EstadoApp:
+class JanelaViewModel:
     """O que a janela inteira precisa saber, e as ações que mudam isso.
 
     Guarda só o que não pertence a nenhuma tela sozinha. O que é de uma tela
-    mora no `estado.py` dela.
+    mora no `view_model.py` dela.
 
     Observável: mudar um campo aqui redesenha sozinho quem estiver usando este
     objeto, sem ninguém chamar `update()`.
@@ -55,4 +55,4 @@ class EstadoApp:
         self.tema = escolhido
 
 
-CONTEXTO_DA_JANELA = ft.create_context(EstadoApp())
+CONTEXTO_DA_JANELA = ft.create_context(JanelaViewModel())

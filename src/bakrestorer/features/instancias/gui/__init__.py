@@ -1,3 +1,3 @@
-from bakrestorer.features.instancias.gui.secao import secao_instancias
+from bakrestorer.features.instancias.gui.view import secao_instancias
 
 __all__ = ["secao_instancias"]

@@ -5,8 +5,8 @@ import flet as ft
 def secao_automacao() -> ft.Control:
     """Mostra onde o usuário vai estender o aplicativo com um script próprio.
 
-    Ainda não faz nada: só segura o lugar. O que ela vai ser está em
-    `.claude/tarefas/secao-de-automacao.md`.
+    Ainda não faz nada: só segura o lugar. O que ela vai ser está na
+    tarefa #013.
     """
     cabecalho = ft.Container(
         content=ft.Row(

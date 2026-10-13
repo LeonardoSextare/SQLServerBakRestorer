@@ -9,6 +9,7 @@ extend-select = ["ALL"]
 select = [
     "I001",
     "FIX002",
+    "PLR0913",
 ]
 ignore = [
     "D100",
@@ -23,3 +24,6 @@ ignore = [
 fixable = ["I001"]
 unfixable = ["ALL"]
 
+
+[lint.pylint]
+max-args = 10
