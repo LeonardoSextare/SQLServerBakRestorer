@@ -119,8 +119,8 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
     """Desenha o cartão de uma instância. Clicar nele abre a edição.
 
     A padrão leva o selo "Padrão" ao lado do nome. O menu fica em todos os
-    cartões, e é ali que moram as ações do cartão -- hoje só definir como
-    padrão, que fica desabilitado na que já é.
+    cartões, e é ali que moram as ações do cartão: definir como padrão, que fica
+    desabilitado na que já é, e remover.
     """
     selo_de_padrao = ft.Container(
         content=ft.Text("Padrão", size=10.5, weight=ft.FontWeight.W_600, color=ft.Colors.PRIMARY),
@@ -147,6 +147,13 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
                 padding=ft.Padding.symmetric(horizontal=14),
                 disabled=padrao,
                 on_click=lambda _: view_model.definir_padrao(instancia),
+            ),
+            ft.PopupMenuItem(
+                content=ft.Text("Remover", size=14, color=ft.Colors.ERROR),
+                icon=ft.Icon(ft.Icons.DELETE_OUTLINE, size=19, color=ft.Colors.ERROR),
+                height=38,
+                padding=ft.Padding.symmetric(horizontal=14),
+                on_click=lambda _: view_model.remover(instancia),
             ),
         ],
     )

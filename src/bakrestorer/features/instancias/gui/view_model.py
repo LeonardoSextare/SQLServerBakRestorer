@@ -87,3 +87,20 @@ class InstanciasViewModel:
 
         """
         self.cadastro = instancias_service().definir_padrao(instancia.alias)
+
+    def remover(self, instancia: Instancia) -> None:
+        """Tira a instância do cadastro.
+
+        Remover a padrão deixa o cadastro sem padrão, até o usuário escolher outra.
+
+        Raises:
+            InstanciaNaoEncontradaError: Se o alias sumiu do cadastro.
+            ArquivoNaoLegivelError: Se o sistema recusou a leitura do cadastro.
+            ArquivoCorrompidoError: Se o arquivo não é json em utf-8.
+            CadastroInvalidoError: Se o gravado não corresponde ao formato.
+            InstanciaInvalidaError: Se uma das instâncias gravadas não
+                corresponde ao formato.
+            ArquivoNaoGravavelError: Se o arquivo não pôde ser gravado.
+
+        """
+        self.cadastro = instancias_service().remover(instancia.alias)
