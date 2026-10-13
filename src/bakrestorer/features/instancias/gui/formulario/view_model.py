@@ -8,13 +8,14 @@ import flet as ft
 
 from bakrestorer.features.instancias import Instancia, InstanciaInvalidaError, InstanciaJaExisteError
 
-type NomeDoCampo = Literal["apelido", "host", "nome", "usuario", "senha", "pasta_dados", "pasta_log"]
+type NomeDoCampo = Literal["apelido", "host", "nome", "porta", "usuario", "senha", "pasta_dados", "pasta_log"]
 
 
 FORMULARIO_VAZIO: dict[NomeDoCampo, str] = {
     "apelido": "",
     "host": "",
     "nome": "",
+    "porta": "",
     "usuario": "",
     "senha": "",
     "pasta_dados": "",
@@ -45,6 +46,7 @@ class FormularioViewModel:
     digitado: dict[NomeDoCampo, str] = field(default_factory=FORMULARIO_VAZIO.copy)
     recusas: dict[NomeDoCampo, str] = field(default_factory=dict)
     pastas_vinculadas: bool = True
+    usa_porta: bool = False
     id_da_instancia: UUID = field(default_factory=uuid4)
 
     def preencher_com(self, instancia: Instancia) -> None:
@@ -56,12 +58,14 @@ class FormularioViewModel:
             "apelido": instancia.apelido,
             "host": instancia.host,
             "nome": instancia.nome or "",
+            "porta": str(instancia.porta or ""),
             "usuario": instancia.usuario,
             "senha": instancia.senha,
             "pasta_dados": str(instancia.pasta_dados or ""),
             "pasta_log": str(instancia.pasta_log or ""),
         }
         self.pastas_vinculadas = instancia.pasta_dados == instancia.pasta_log
+        self.usa_porta = instancia.porta is not None
         self.id_da_instancia = instancia.id
 
     def digitar(self, campo: NomeDoCampo, texto: str) -> None:
@@ -89,6 +93,15 @@ class FormularioViewModel:
         self.pastas_vinculadas = True
         self.digitado = {**self.digitado, "pasta_log": self.digitado["pasta_dados"]}
 
+    def alternar_nome_e_porta(self) -> None:
+        """Troca entre achar a instância pelo nome e achar pela porta.
+
+        A recusa dos dois sai junto: ela foi dada ao campo que estava na tela, e
+        não vale para o que entra no lugar dele.
+        """
+        self.usa_porta = not self.usa_porta
+        self.recusas = {campo: motivo for campo, motivo in self.recusas.items() if campo not in ("nome", "porta")}
+
     def salvar(self, gravar: Callable[[Instancia], None]) -> None:
         """Monta a instância e a entrega a `gravar`.
 
@@ -107,7 +120,7 @@ class FormularioViewModel:
         try:
             instancia = self._montar()
         except InstanciaInvalidaError as erro:
-            self._recusar(erro.campos, "Preencha este campo")
+            self.recusas = {campo: self._motivo_da_recusa(campo) for campo in self.digitado if campo in erro.campos}
             return
 
         try:
@@ -119,6 +132,17 @@ class FormularioViewModel:
         """Marca os campos que impediram o salvamento, todos com o mesmo motivo."""
         self.recusas = {campo: motivo for campo in self.digitado if campo in campos}
 
+    def _motivo_da_recusa(self, campo: NomeDoCampo) -> str:
+        """Diz por que o model recusou o campo, olhando o que foi digitado nele.
+
+        A porta preenchida e recusada só pode estar fora da faixa: o filtro do
+        campo não deixa entrar nada além de algarismos.
+        """
+        if campo == "porta" and self.digitado["porta"].strip():
+            return "Use uma porta de 1 a 65535"
+
+        return "Preencha este campo"
+
     def _montar(self) -> Instancia:
         """Transforma o que foi digitado numa instância.
 
@@ -126,9 +150,11 @@ class FormularioViewModel:
         pode ser de propósito.
 
         Raises:
-            InstanciaInvalidaError: Se algum campo obrigatório ficou vazio.
+            InstanciaInvalidaError: Se algum campo obrigatório ficou vazio, ou se
+                a porta está fora da faixa.
 
         """
+        porta = self.digitado["porta"].strip()
         pasta_dados = self.digitado["pasta_dados"].strip()
         pasta_log = self.digitado["pasta_log"].strip()
 
@@ -136,7 +162,8 @@ class FormularioViewModel:
             id=self.id_da_instancia,
             apelido=self.digitado["apelido"].strip(),
             host=self.digitado["host"].strip(),
-            nome=self.digitado["nome"].strip(),
+            nome=None if self.usa_porta else self.digitado["nome"].strip(),
+            porta=int(porta) if self.usa_porta and porta else None,
             usuario=self.digitado["usuario"].strip(),
             senha=self.digitado["senha"],
             pasta_dados=Path(pasta_dados) if pasta_dados else None,

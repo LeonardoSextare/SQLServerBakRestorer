@@ -139,6 +139,7 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
         tooltip="A instância que o aplicativo usa para ler os backups",
     )
     nome = ft.Text(instancia.apelido, size=15, weight=ft.FontWeight.W_500)
+    nome_ou_porta = instancia.nome or f"Porta {instancia.porta}"
 
     menu = ft.PopupMenuButton(
         icon=ft.Icons.MORE_HORIZ,
@@ -170,7 +171,7 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
         content=ft.ListTile(
             leading=ft.Icon(ft.Icons.STORAGE, size=20, color=ft.Colors.PRIMARY),
             title=ft.Row(controls=[nome, selo_de_padrao] if padrao else [nome], spacing=8, tight=True),
-            subtitle=ft.Text(f"{instancia.nome} · {instancia.usuario}", size=13, opacity=0.7),
+            subtitle=ft.Text(f"{nome_ou_porta} · {instancia.usuario}", size=13, opacity=0.7),
             trailing=menu,
             min_height=62,
             content_padding=ft.Padding.symmetric(horizontal=14, vertical=4),
