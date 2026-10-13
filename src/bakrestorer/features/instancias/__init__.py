@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from bakrestorer.features.instancias.domain.diagnostico_service import DiagnosticoService
 from bakrestorer.features.instancias.domain.exceptions import (
     CadastroInvalidoError,
+    DiagnosticoInvalidoError,
     InstanciaError,
     InstanciaInvalidaError,
     InstanciaJaExisteError,
@@ -9,7 +11,7 @@ from bakrestorer.features.instancias.domain.exceptions import (
     InstanciasError,
 )
 from bakrestorer.features.instancias.domain.instancias_service import InstanciasService
-from bakrestorer.features.instancias.domain.models import ConfigInstancias, Instancia
+from bakrestorer.features.instancias.domain.models import ConfigInstancias, Diagnostico, EstadoDaInstancia, Instancia
 from bakrestorer.infra.config_json import ConfigJson
 
 CHAVE_DA_CONFIG = "instancias"
@@ -17,6 +19,10 @@ CHAVE_DA_CONFIG = "instancias"
 __all__ = [
     "CadastroInvalidoError",
     "ConfigInstancias",
+    "Diagnostico",
+    "DiagnosticoInvalidoError",
+    "DiagnosticoService",
+    "EstadoDaInstancia",
     "Instancia",
     "InstanciaError",
     "InstanciaInvalidaError",

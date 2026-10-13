@@ -1,3 +1,4 @@
+from enum import StrEnum
 from pathlib import Path
 from typing import Self
 from uuid import UUID, uuid4
@@ -5,7 +6,11 @@ from uuid import UUID, uuid4
 from pydantic import Field, model_validator
 
 from bakrestorer.base_model import BakRestorerModel
-from bakrestorer.features.instancias.domain.exceptions import CadastroInvalidoError, InstanciaInvalidaError
+from bakrestorer.features.instancias.domain.exceptions import (
+    CadastroInvalidoError,
+    DiagnosticoInvalidoError,
+    InstanciaInvalidaError,
+)
 
 
 class Instancia(BakRestorerModel):
@@ -89,3 +94,25 @@ class ConfigInstancias(BakRestorerModel):
     def obter_pelo_apelido(self, apelido: str) -> Instancia | None:
         """Procura uma instância cadastrada pelo nome que o usuário vê."""
         return next((item for item in self.itens if item.apelido == apelido), None)
+
+
+class EstadoDaInstancia(StrEnum):
+    """O que o diagnóstico descobriu ao procurar a instância."""
+
+    ACESSIVEL = "acessivel"
+    INACESSIVEL = "inacessivel"
+    CREDENCIAIS_RECUSADAS = "credenciais_recusadas"
+
+
+class Diagnostico(BakRestorerModel):
+    """A resposta de uma instância ao diagnóstico.
+
+    `detalhe` é o que o servidor ou a rede responderam, e vem vazio quando o
+    tempo de espera acaba sem resposta nenhuma.
+    """
+
+    ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
+
+    id_da_instancia: UUID
+    estado: EstadoDaInstancia
+    detalhe: str = ""

@@ -1,7 +1,30 @@
+from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from bakrestorer.features.instancias import InstanciasService, criar_service
+from bakrestorer.features.instancias import DiagnosticoService, Instancia, InstanciasService, criar_service
+
+if TYPE_CHECKING:
+    from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
+
+
+@pytest.fixture
+def instancia_no_conteiner(criar_instancia: Callable[..., Instancia], instancia_sql_server: Conexao) -> Instancia:
+    """A instância do contêiner como o usuário a cadastraria: pela porta, que é como se chega nela."""
+    return criar_instancia(
+        host=instancia_sql_server.host,
+        nome=None,
+        porta=instancia_sql_server.porta,
+        usuario=instancia_sql_server.usuario,
+        senha=instancia_sql_server.senha,
+    )
+
+
+@pytest.fixture
+def servico_de_diagnostico(cliente_sql_server: ClienteSqlServer) -> DiagnosticoService:
+    """Serviço sob teste, falando com o contêiner."""
+    return DiagnosticoService(cliente_sql_server)
 
 
 @pytest.fixture

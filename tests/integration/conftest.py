@@ -61,7 +61,7 @@ def derrubar_sessao(instancia_sql_server: Conexao) -> Iterator[Callable[[Cliente
 
 @pytest.fixture
 def cliente_sql_server() -> Iterator[ClienteSqlServer]:
-    """Cliente sob teste, encerrado ao fim para não deixar sessão aberta no contêiner."""
+    """Cliente do SQL Server, encerrado ao fim para não deixar sessão aberta no contêiner."""
     cliente = ClienteSqlServer()
 
     try:

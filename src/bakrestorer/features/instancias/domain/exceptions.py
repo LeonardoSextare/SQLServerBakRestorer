@@ -15,6 +15,10 @@ class CadastroInvalidoError(ModelInvalidoError, InstanciasError):
     """O cadastro não corresponde ao formato esperado."""
 
 
+class DiagnosticoInvalidoError(ModelInvalidoError, InstanciasError):
+    """Os dados informados não formam um diagnóstico válido."""
+
+
 class InstanciaError(InstanciasError):
     """Falha ao alterar uma instância do cadastro."""
 

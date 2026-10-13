@@ -1,0 +1,1 @@
+PING = "SELECT 1"
