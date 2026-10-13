@@ -1,40 +1,11 @@
+import math
 from collections.abc import Callable
-from typing import NamedTuple
+from typing import Literal
 
 import flet as ft
 
 from bakrestorer.features.instancias import Instancia
 from bakrestorer.features.instancias.gui.formulario.view_model import FormularioViewModel, NomeDoCampo
-
-
-class Campo(NamedTuple):
-    """Um campo de texto do formulário: o que ele guarda e como aparece."""
-
-    nome: NomeDoCampo
-    rotulo: str
-    icone: ft.IconData
-    secreto: bool = False
-
-
-GRUPOS_DE_CAMPOS: dict[str, tuple[tuple[Campo, ...], ...]] = {
-    "Conexão": (
-        (Campo("alias", "Apelido", ft.Icons.LABEL_OUTLINE),),
-        (
-            Campo("host", "Host", ft.Icons.DNS_OUTLINED),
-            Campo("nome", "Instância", ft.Icons.STORAGE),
-        ),
-        (
-            Campo("usuario", "Usuário", ft.Icons.PERSON_OUTLINE),
-            Campo("senha", "Senha", ft.Icons.KEY_OUTLINED, secreto=True),
-        ),
-    ),
-    "Arquivos (opcional)": (
-        (
-            Campo("pasta_dados", "Pasta de dados", ft.Icons.FOLDER_OUTLINED),
-            Campo("pasta_log", "Pasta de log", ft.Icons.FOLDER_OUTLINED),
-        ),
-    ),
-}
 
 
 @ft.component
@@ -59,8 +30,8 @@ def formulario(
     no `inicial`, antes de entregar, e nunca no `view_model` que volta. Lá, ele
     copiaria a instância por cima do que foi digitado a cada redesenho.
 
-    Os campos vêm da tabela `GRUPOS_DE_CAMPOS`, na ordem da tela: cada grupo tem
-    um título e linhas de campos lado a lado.
+    Os campos são desenhados um a um, na ordem da tela, para o código ter a
+    forma do que aparece.
     """
     editando = instancia_em_edicao is not None
     inicial = FormularioViewModel()
@@ -72,10 +43,30 @@ def formulario(
 
     campos = ft.Column(
         controls=[
-            _grupo_de_campos(view_model, titulo, linhas, editando=editando)
-            for titulo, linhas in GRUPOS_DE_CAMPOS.items()
+            ft.Text("Conexão", size=12, opacity=0.7),
+            # TODO: o apelido trava na edição porque ele é a identidade -- tarefa #019
+            _campo_de_texto(view_model, "alias", "Apelido", ft.Icons.LABEL_OUTLINE, travado=editando, foco=True),
+            ft.Row(
+                controls=[
+                    _campo_de_texto(view_model, "host", "Host", ft.Icons.DNS_OUTLINED),
+                    _campo_de_texto(view_model, "nome", "Instância", ft.Icons.STORAGE),
+                ],
+                spacing=10,
+            ),
+            ft.Row(
+                controls=[
+                    _campo_de_texto(view_model, "usuario", "Usuário", ft.Icons.PERSON_OUTLINE),
+                    _campo_de_texto(view_model, "senha", "Senha", ft.Icons.KEY_OUTLINED, secreto=True),
+                ],
+                spacing=10,
+            ),
+            ft.Container(
+                content=ft.Text("Arquivos (opcional)", size=12, opacity=0.7),
+                padding=ft.Padding.only(top=6),
+            ),
+            _par_de_pastas(view_model),
         ],
-        spacing=16,
+        spacing=10,
     )
 
     rodape = ft.Row(
@@ -90,42 +81,29 @@ def formulario(
     return ft.Column(controls=[campos, rodape], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
 
 
-def _grupo_de_campos(
+def _campo_de_texto(
     view_model: FormularioViewModel,
-    titulo: str,
-    linhas: tuple[tuple[Campo, ...], ...],
+    campo: NomeDoCampo,
+    rotulo: str,
+    icone: ft.IconData,
     *,
-    editando: bool,
-) -> ft.Control:
-    """Desenha o título de um grupo e, abaixo dele, cada linha de campos lado a lado."""
-    return ft.Column(
-        controls=[
-            ft.Text(titulo, size=12, opacity=0.7),
-            *(
-                ft.Row(controls=[_campo_de_texto(view_model, campo, editando=editando) for campo in linha], spacing=10)
-                for linha in linhas
-            ),
-        ],
-        spacing=10,
-    )
+    secreto: bool = False,
+    travado: bool = False,
+    foco: bool = False,
+) -> ft.TextField:
+    """Desenha um campo de texto ligado a um campo do view model.
 
-
-def _campo_de_texto(view_model: FormularioViewModel, campo: Campo, *, editando: bool) -> ft.TextField:
-    """Desenha um campo de texto ligado ao view model.
-
-    O foco começa sempre no apelido, o primeiro campo. Borda, fundo e raio são
-    dados aqui porque o tema não alcança o TextField.
+    Borda, fundo e raio são dados aqui porque o tema não alcança o TextField.
     """
-    # TODO: o apelido trava na edição porque ele é a identidade -- tarefa #019
     return ft.TextField(
-        label=campo.rotulo,
-        value=view_model.digitado[campo.nome],
-        error=view_model.recusas.get(campo.nome),
-        prefix_icon=ft.Icon(campo.icone, size=18, opacity=0.7),
-        password=campo.secreto,
-        can_reveal_password=campo.secreto,
-        read_only=editando and campo.nome == "alias",
-        autofocus=campo.nome == "alias",
+        label=rotulo,
+        value=view_model.digitado[campo],
+        error=view_model.recusas.get(campo),
+        prefix_icon=ft.Icon(icone, size=18, opacity=0.7),
+        password=secreto,
+        can_reveal_password=secreto,
+        read_only=travado,
+        autofocus=foco,
         dense=True,
         filled=True,
         fill_color=ft.Colors.with_opacity(0.06, ft.Colors.ON_SURFACE),
@@ -133,5 +111,100 @@ def _campo_de_texto(view_model: FormularioViewModel, campo: Campo, *, editando: 
         border_radius=8,
         text_size=14,
         expand=True,
-        on_change=lambda evento: view_model.digitar(campo.nome, evento.control.value),
+        on_change=lambda evento: view_model.digitar(campo, evento.control.value),
+    )
+
+
+@ft.component
+def _par_de_pastas(view_model: FormularioViewModel) -> ft.Control:
+    """Desenha as duas pastas lado a lado, com a corrente que liga uma à outra.
+
+    Vincular anima em dois tempos: as linhas saem do meio da corrente até as
+    pastas e, quando chegam, o contorno das pastas acende. Desvincular faz o
+    caminho inverso: o contorno apaga e, quando termina, as linhas voltam para a
+    corrente.
+
+    O segundo tempo começa no fim do primeiro, pelo `on_animation_end`, e por
+    isso o componente guarda em `desenho_concluido` qual desenho já terminou.
+    É estado só da animação: o vínculo de verdade é o `pastas_vinculadas` do
+    view model. Toda animação que termina faz o desenho alcançar o vínculo que
+    vale naquele momento.
+
+    Nada muda de tamanho no caminho: as linhas crescem dentro de um espaço fixo,
+    e o contorno só troca de cor. O ritmo é constante, e lento o bastante para
+    o caminho curto das linhas ser visto.
+    """
+    vinculadas = view_model.pastas_vinculadas
+    desenho_inicial = "pastas_ligadas" if vinculadas else "pastas_separadas"
+    desenho_concluido, marcar_desenho_concluido = ft.use_state(desenho_inicial)
+
+    linhas_visiveis = vinculadas or desenho_concluido == "pastas_ligadas"
+    contorno_visivel = vinculadas and desenho_concluido == "pastas_ligadas"
+    cor_do_vinculo = ft.Colors.with_opacity(0.45, ft.Colors.PRIMARY)
+    animacao_das_linhas = ft.Animation(duration=320, curve=ft.AnimationCurve.LINEAR)
+    animacao_do_contorno = ft.Animation(duration=250, curve=ft.AnimationCurve.LINEAR)
+
+    def concluir_desenho() -> None:
+        marcar_desenho_concluido("pastas_ligadas" if view_model.pastas_vinculadas else "pastas_separadas")
+
+    def com_contorno(campo: ft.TextField) -> ft.Control:
+        return ft.Container(
+            content=campo,
+            border=ft.Border.all(1, cor_do_vinculo if contorno_visivel else ft.Colors.TRANSPARENT),
+            border_radius=9,
+            animate=animacao_do_contorno,
+            expand=True,
+            on_animation_end=lambda _: concluir_desenho(),
+        )
+
+    linhas_com_corrente = ft.Stack(
+        controls=[
+            ft.Container(
+                right=24,
+                top=19,
+                width=24 if linhas_visiveis else 0,
+                height=1.5,
+                bgcolor=cor_do_vinculo,
+                animate=animacao_das_linhas,
+                on_animation_end=lambda _: concluir_desenho(),
+            ),
+            ft.Container(
+                left=24,
+                top=19,
+                width=24 if linhas_visiveis else 0,
+                height=1.5,
+                bgcolor=cor_do_vinculo,
+                animate=animacao_das_linhas,
+            ),
+            ft.Container(
+                content=ft.Icon(
+                    ft.Icons.LINK if vinculadas else ft.Icons.LINK_OFF,
+                    size=20,
+                    color=ft.Colors.PRIMARY if vinculadas else None,
+                    opacity=1 if vinculadas else 0.6,
+                    rotate=-math.pi / 4 if vinculadas else 0,
+                    animate_rotation=animacao_das_linhas,
+                ),
+                left=8,
+                top=4,
+                width=32,
+                height=32,
+                border_radius=16,
+                alignment=ft.Alignment.CENTER,
+                ink=True,
+                tooltip="Separar as pastas" if vinculadas else "Usar a mesma pasta para dados e log",
+                on_click=lambda _: view_model.alternar_vinculo_das_pastas(),
+            ),
+        ],
+        width=48,
+        height=40,
+    )
+
+    return ft.Row(
+        controls=[
+            com_contorno(_campo_de_texto(view_model, "pasta_dados", "Pasta de dados", ft.Icons.FOLDER_OUTLINED)),
+            linhas_com_corrente,
+            com_contorno(_campo_de_texto(view_model, "pasta_log", "Pasta de log", ft.Icons.FOLDER_OUTLINED)),
+        ],
+        spacing=0,
     )

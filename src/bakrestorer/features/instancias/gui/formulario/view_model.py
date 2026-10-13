@@ -32,13 +32,20 @@ class FormularioViewModel:
 
     `digitado` tem sempre todos os campos, mesmo os vazios: assim ler um campo
     nunca falha por falta da chave.
+
+    Com `pastas_vinculadas`, digitar numa das pastas escreve igual na outra. O
+    formulário nasce vinculado, porque as duas pastas começam vazias, e iguais.
     """
 
     digitado: dict[NomeDoCampo, str] = field(default_factory=FORMULARIO_VAZIO.copy)
     recusas: dict[NomeDoCampo, str] = field(default_factory=dict)
+    pastas_vinculadas: bool = True
 
     def preencher_com(self, instancia: Instancia) -> None:
-        """Copia para o formulário os dados de uma instância já cadastrada."""
+        """Copia para o formulário os dados de uma instância já cadastrada.
+
+        As pastas ficam vinculadas só se a instância já usa a mesma para as duas.
+        """
         self.digitado = {
             "alias": instancia.alias,
             "host": instancia.host,
@@ -48,11 +55,32 @@ class FormularioViewModel:
             "pasta_dados": str(instancia.pasta_dados or ""),
             "pasta_log": str(instancia.pasta_log or ""),
         }
+        self.pastas_vinculadas = instancia.pasta_dados == instancia.pasta_log
 
     def digitar(self, campo: NomeDoCampo, texto: str) -> None:
-        """Guarda o que foi digitado num campo e tira a recusa dele."""
-        self.digitado = {**self.digitado, campo: texto}
-        self.recusas = {recusado: motivo for recusado, motivo in self.recusas.items() if recusado != campo}
+        """Guarda o que foi digitado num campo e tira a recusa dele.
+
+        Com as pastas vinculadas, digitar numa delas escreve igual na outra.
+        """
+        alterados: dict[NomeDoCampo, str] = {campo: texto}
+
+        if self.pastas_vinculadas and campo in ("pasta_dados", "pasta_log"):
+            alterados = {"pasta_dados": texto, "pasta_log": texto}
+
+        self.digitado = {**self.digitado, **alterados}
+        self.recusas = {recusado: motivo for recusado, motivo in self.recusas.items() if recusado not in alterados}
+
+    def alternar_vinculo_das_pastas(self) -> None:
+        """Liga ou desliga o vínculo entre as pastas de dados e de log.
+
+        Ao ligar, a pasta de log passa a ser igual à de dados.
+        """
+        if self.pastas_vinculadas:
+            self.pastas_vinculadas = False
+            return
+
+        self.pastas_vinculadas = True
+        self.digitado = {**self.digitado, "pasta_log": self.digitado["pasta_dados"]}
 
     def salvar(self, gravar: Callable[[Instancia], None]) -> None:
         """Monta a instância e a entrega a `gravar`.
