@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-from bakrestorer.features.instancias import Instancia
+from bakrestorer.features.instancias import EstadoDaInstancia, Instancia
 from bakrestorer.features.instancias.gui.formulario.view_model import FormularioViewModel, NomeDoCampo
 
 
@@ -15,9 +15,9 @@ def formulario(
 ) -> ft.Control:
     """Os campos de uma instância e, embaixo, o rodapé com os botões.
 
-    No rodapé, Testar conexão fica sozinho à esquerda, longe de Cancelar e
-    Salvar: ele confere a instância, e não fecha o formulário. Por enquanto ele
-    só existe desabilitado -- o diagnóstico ainda não foi escrito.
+    No rodapé, Testar conexão fica à esquerda, longe de Cancelar e Salvar: ele
+    confere a instância, e não fecha o formulário. A resposta dele aparece ao
+    lado, porque a janela não tem altura sobrando para um painel.
 
     Não conhece quem o usa: recebe a instância em edição, ou None para uma
     nova, e as funções que gravam e que fecham. Assim serve em qualquer tela
@@ -72,11 +72,9 @@ def formulario(
 
     rodape = ft.Row(
         controls=[
-            ft.OutlinedButton(
-                content="Testar conexão",
-                icon=ft.Icons.NETWORK_CHECK,
-                disabled=True,
-                tooltip="Em breve",
+            ft.Row(
+                controls=[_botao_de_teste(view_model), _resultado_do_teste(view_model)],
+                spacing=12,
             ),
             ft.Row(
                 controls=[
@@ -94,6 +92,55 @@ def formulario(
     )
 
     return ft.Column(controls=[campos, rodape], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+
+
+def _botao_de_teste(view_model: FormularioViewModel) -> ft.Control:
+    """Desenha o botão de testar a conexão, que gira e fica desabilitado enquanto testa.
+
+    Ele só tem os dois estados: o resultado não mora nele, para o botão voltar a
+    dizer o que faz assim que o teste termina.
+    """
+    if view_model.testando:
+        return ft.OutlinedButton(
+            content=ft.Row(
+                controls=[
+                    ft.ProgressRing(width=14, height=14, stroke_width=2),
+                    ft.Text("Testando…"),
+                ],
+                spacing=8,
+                tight=True,
+            ),
+            disabled=True,
+        )
+
+    return ft.OutlinedButton(
+        content="Testar conexão",
+        icon=ft.Icons.NETWORK_CHECK,
+        on_click=view_model.testar_conexao,
+    )
+
+
+def _resultado_do_teste(view_model: FormularioViewModel) -> ft.Control:
+    """Desenha a resposta do último teste como um ícone só, com o texto na dica.
+
+    Só o ícone, porque texto no rodapé empurra o Salvar para fora da janela. O
+    que o servidor respondeu vem junto na dica: ele vem em inglês, ou no idioma
+    do servidor, e às vezes é longo.
+    """
+    if view_model.diagnostico is None:
+        return ft.Container()
+
+    match view_model.diagnostico.estado:
+        case EstadoDaInstancia.ACESSIVEL:
+            icone, cor, texto = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY, "Conectou"
+        case EstadoDaInstancia.CREDENCIAIS_RECUSADAS:
+            icone, cor, texto = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, "Usuário ou senha recusados"
+        case EstadoDaInstancia.INACESSIVEL:
+            icone, cor, texto = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, "A instância não respondeu"
+
+    detalhe = view_model.diagnostico.detalhe
+
+    return ft.Icon(icone, size=20, color=cor, tooltip=f"{texto}\n{detalhe}" if detalhe else texto)
 
 
 def _campo_de_texto(
