@@ -1,6 +1,8 @@
 from collections.abc import Iterable
+from datetime import timedelta
+from time import perf_counter
 
-from bakrestorer.features.instancias.domain.models import Diagnostico, EstadoDaInstancia, Instancia
+from bakrestorer.features.instancias.domain.models import Diagnostico, Instancia, Verificacao
 from bakrestorer.features.instancias.domain.queries import PING
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
@@ -16,7 +18,7 @@ class DiagnosticoService:
     Não guarda estado: quem guarda as sessões abertas é o cliente.
 
     Instância fora do ar e credencial recusada não são falha do diagnóstico:
-    são a resposta dele, e voltam como `Diagnostico`.
+    são a resposta dele, e voltam como verificações do `Diagnostico`.
     """
 
     def __init__(self, cliente: ClienteSqlServer) -> None:
@@ -26,7 +28,8 @@ class DiagnosticoService:
         """Pergunta à instância tudo que decide se ela está pronta para restaurar.
 
         Hoje é só o acesso. As outras checagens entram aqui, depois dele, porque
-        precisam do login que ele faz.
+        precisam do login que ele faz. Elas rodam todas, mesmo quando uma falha,
+        para o checklist mostrar de uma vez tudo que está errado.
 
         Raises:
             ComandoRecusadoError: Se a instância aceitou o login e recusou o
@@ -36,10 +39,11 @@ class DiagnosticoService:
         return self.conferir_acesso(instancia)
 
     def conferir_acesso(self, instancia: Instancia) -> Diagnostico:
-        """Pergunta à instância se ela está no ar e se a credencial vale.
+        """Pergunta à instância se ela responde e se o login é aceito.
 
-        A sessão guardada é descartada antes, para o ping fazer login de novo: ela
-        só prova que a credencial valia quando abriu.
+        A sessão guardada é descartada antes, para o primeiro ping fazer login de
+        novo: ela só prova que a credencial valia quando abriu. A latência sai do
+        segundo ping, que já não carrega o tempo do login.
 
         Raises:
             ComandoRecusadoError: Se a instância aceitou o login e recusou o
@@ -51,20 +55,28 @@ class DiagnosticoService:
 
         try:
             self._cliente.executar(conexao, PING)
+            inicio = perf_counter()
+            self._cliente.executar(conexao, PING)
+            latencia = timedelta(seconds=perf_counter() - inicio)
         except InstanciaInacessivelError as falha:
             return Diagnostico(
                 id_da_instancia=instancia.id,
-                estado=EstadoDaInstancia.INACESSIVEL,
-                detalhe=falha.detalhe,
+                conexao=Verificacao(situacao="erro", detalhe=falha.detalhe),
+                login=Verificacao(situacao="nao_verificado"),
             )
         except CredenciaisInvalidasError as falha:
             return Diagnostico(
                 id_da_instancia=instancia.id,
-                estado=EstadoDaInstancia.CREDENCIAIS_RECUSADAS,
-                detalhe=falha.detalhe,
+                conexao=Verificacao(situacao="ok"),
+                login=Verificacao(situacao="erro", detalhe=falha.detalhe),
             )
 
-        return Diagnostico(id_da_instancia=instancia.id, estado=EstadoDaInstancia.ACESSIVEL)
+        return Diagnostico(
+            id_da_instancia=instancia.id,
+            conexao=Verificacao(situacao="ok"),
+            login=Verificacao(situacao="ok"),
+            latencia=latencia,
+        )
 
     def diagnosticar_todas(self, instancias: Iterable[Instancia]) -> tuple[Diagnostico, ...]:
         """Diagnostica cada instância, na ordem em que vieram.

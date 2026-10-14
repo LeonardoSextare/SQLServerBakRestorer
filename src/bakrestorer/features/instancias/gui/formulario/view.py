@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-from bakrestorer.features.instancias import EstadoDaInstancia, Instancia
+from bakrestorer.features.instancias import Instancia
 from bakrestorer.features.instancias.gui.formulario.view_model import FormularioViewModel, NomeDoCampo
 
 
@@ -121,26 +121,27 @@ def _botao_de_teste(view_model: FormularioViewModel) -> ft.Control:
 
 
 def _resultado_do_teste(view_model: FormularioViewModel) -> ft.Control:
-    """Desenha a resposta do último teste como um ícone só, com o texto na dica.
+    """Desenha o resumo do último diagnóstico como um ícone só, com o resto na dica.
 
-    Só o ícone, porque texto no rodapé empurra o Salvar para fora da janela. O
-    que o servidor respondeu vem junto na dica: ele vem em inglês, ou no idioma
-    do servidor, e às vezes é longo.
+    Só o ícone, porque texto no rodapé empurra o Salvar para fora da janela. É
+    provisório: o checklist completo vai abrir ao clicar nele.
     """
-    if view_model.diagnostico is None:
+    diagnostico = view_model.diagnostico
+
+    if diagnostico is None:
         return ft.Container()
 
-    match view_model.diagnostico.estado:
-        case EstadoDaInstancia.ACESSIVEL:
-            icone, cor, texto = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY, "Conectou"
-        case EstadoDaInstancia.CREDENCIAIS_RECUSADAS:
-            icone, cor, texto = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, "Usuário ou senha recusados"
-        case EstadoDaInstancia.INACESSIVEL:
-            icone, cor, texto = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, "A instância não respondeu"
+    match diagnostico.situacao:
+        case "erro":
+            falha = diagnostico.conexao if diagnostico.conexao.situacao == "erro" else diagnostico.login
+            icone, cor, dica = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, falha.detalhe or "Sem resposta a tempo"
+        case "aviso":
+            icone, cor, dica = ft.Icons.WARNING_AMBER, ft.Colors.TERTIARY, "Há avisos"
+        case "ok":
+            latencia = f" em {diagnostico.latencia.total_seconds() * 1000:.0f} ms" if diagnostico.latencia else ""
+            icone, cor, dica = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY, f"Conectou{latencia}"
 
-    detalhe = view_model.diagnostico.detalhe
-
-    return ft.Icon(icone, size=20, color=cor, tooltip=f"{texto}\n{detalhe}" if detalhe else texto)
+    return ft.Icon(icone, size=20, color=cor, tooltip=dica)
 
 
 def _campo_de_texto(

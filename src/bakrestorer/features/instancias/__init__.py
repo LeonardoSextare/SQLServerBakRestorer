@@ -11,7 +11,13 @@ from bakrestorer.features.instancias.domain.exceptions import (
     InstanciasError,
 )
 from bakrestorer.features.instancias.domain.instancias_service import InstanciasService
-from bakrestorer.features.instancias.domain.models import ConfigInstancias, Diagnostico, EstadoDaInstancia, Instancia
+from bakrestorer.features.instancias.domain.models import (
+    ConfigInstancias,
+    Diagnostico,
+    Instancia,
+    Situacao,
+    Verificacao,
+)
 from bakrestorer.infra.config_json import ConfigJson
 from bakrestorer.infra.sqlserver import ClienteSqlServer
 
@@ -23,7 +29,6 @@ __all__ = [
     "Diagnostico",
     "DiagnosticoInvalidoError",
     "DiagnosticoService",
-    "EstadoDaInstancia",
     "Instancia",
     "InstanciaError",
     "InstanciaInvalidaError",
@@ -31,6 +36,8 @@ __all__ = [
     "InstanciaNaoEncontradaError",
     "InstanciasError",
     "InstanciasService",
+    "Situacao",
+    "Verificacao",
     "criar_diagnostico_service",
     "criar_instancias_service",
 ]

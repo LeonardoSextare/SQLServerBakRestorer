@@ -1,6 +1,6 @@
-from enum import StrEnum
+from datetime import timedelta
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID, uuid4
 
 from pydantic import Field, model_validator
@@ -96,16 +96,11 @@ class ConfigInstancias(BakRestorerModel):
         return next((item for item in self.itens if item.apelido == apelido), None)
 
 
-class EstadoDaInstancia(StrEnum):
-    """O que o diagnóstico descobriu ao procurar a instância."""
-
-    ACESSIVEL = "acessivel"
-    INACESSIVEL = "inacessivel"
-    CREDENCIAIS_RECUSADAS = "credenciais_recusadas"
+type Situacao = Literal["ok", "aviso", "erro", "nao_verificado"]
 
 
-class Diagnostico(BakRestorerModel):
-    """A resposta de uma instância ao diagnóstico.
+class Verificacao(BakRestorerModel):
+    """Um item do checklist do diagnóstico.
 
     `detalhe` é o que o servidor ou a rede responderam, e vem vazio quando o
     tempo de espera acaba sem resposta nenhuma.
@@ -113,6 +108,38 @@ class Diagnostico(BakRestorerModel):
 
     ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
 
-    id_da_instancia: UUID
-    estado: EstadoDaInstancia
+    situacao: Situacao
     detalhe: str = ""
+
+
+class Diagnostico(BakRestorerModel):
+    """O checklist de uma instância: cada verificação e como ela ficou.
+
+    A verificação que depende de outra que falhou fica não verificada: sem
+    resposta não há login, e sem login não há o que perguntar. `latencia` é o
+    tempo de ida e volta de um comando, e só existe quando o login passou.
+    """
+
+    ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
+
+    id_da_instancia: UUID
+    conexao: Verificacao
+    login: Verificacao
+    latencia: timedelta | None = None
+
+    @property
+    def situacao(self) -> Literal["ok", "aviso", "erro"]:
+        """Resume o checklist na pior situação que ele tem.
+
+        O não verificado não entra no resumo: ele só existe porque algo antes
+        dele falhou, e essa falha já deu o resumo.
+        """
+        situacoes = {self.conexao.situacao, self.login.situacao}
+
+        if "erro" in situacoes:
+            return "erro"
+
+        if "aviso" in situacoes:
+            return "aviso"
+
+        return "ok"

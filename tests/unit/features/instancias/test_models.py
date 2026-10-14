@@ -6,8 +6,11 @@ import pytest
 from bakrestorer.features.instancias import (
     CadastroInvalidoError,
     ConfigInstancias,
+    Diagnostico,
     Instancia,
     InstanciaInvalidaError,
+    Situacao,
+    Verificacao,
 )
 
 
@@ -202,3 +205,31 @@ class TestObterPeloApelido:
         criar_cadastro: Callable[..., ConfigInstancias],
     ) -> None:
         assert criar_cadastro().obter_pelo_apelido("HOMOLOG") is None
+
+
+class TestSituacao:
+    """Cobre `Diagnostico.situacao`."""
+
+    @pytest.mark.parametrize(
+        ("resposta", "login", "resumo"),
+        [
+            ("ok", "ok", "ok"),
+            ("ok", "aviso", "aviso"),
+            ("ok", "erro", "erro"),
+            ("erro", "nao_verificado", "erro"),
+        ],
+        ids=["tudo_ok", "um_aviso", "login_falhou", "sem_resposta"],
+    )
+    def test_dado_um_checklist_quando_resumir_entao_vale_a_pior_situacao(
+        self,
+        resposta: Situacao,
+        login: Situacao,
+        resumo: str,
+    ) -> None:
+        diagnostico = Diagnostico(
+            id_da_instancia=uuid4(),
+            conexao=Verificacao(situacao=resposta),
+            login=Verificacao(situacao=login),
+        )
+
+        assert diagnostico.situacao == resumo
