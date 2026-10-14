@@ -34,7 +34,8 @@ def diagnostico_service() -> DiagnosticoService:
 def cliente_sql_server() -> ClienteSqlServer:
     """Devolve o cliente do SQL Server, um só para o aplicativo inteiro.
 
-    Um só porque é ele que guarda as sessões abertas: quem vier depois do
-    diagnóstico, como a restauração, encontra pronta a sessão que ele abriu.
+    Ele não guarda sessão: cada operação abre e fecha a própria conexão. É um só
+    para a configuração da conexão, como o tempo limite do login, valer igual
+    para todas as features.
     """
     return ClienteSqlServer()

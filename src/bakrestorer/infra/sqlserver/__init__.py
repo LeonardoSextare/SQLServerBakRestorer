@@ -1,4 +1,4 @@
-from bakrestorer.infra.sqlserver.client import ClienteSqlServer
+from bakrestorer.infra.sqlserver.client import ClienteSqlServer, Sessao
 from bakrestorer.infra.sqlserver.connection import Conexao
 from bakrestorer.infra.sqlserver.exceptions import (
     ComandoRecusadoError,
@@ -13,5 +13,6 @@ __all__ = [
     "Conexao",
     "CredenciaisInvalidasError",
     "InstanciaInacessivelError",
+    "Sessao",
     "SqlServerError",
 ]

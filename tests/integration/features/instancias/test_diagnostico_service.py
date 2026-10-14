@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from bakrestorer.features.instancias import DiagnosticoService, Instancia
-from bakrestorer.infra.sqlserver import ClienteSqlServer, Conexao
+from bakrestorer.infra.sqlserver import ClienteSqlServer
 
 
 class TestConferirAcesso:
@@ -25,29 +25,12 @@ class TestConferirAcesso:
 
         assert servico_de_diagnostico.conferir_acesso(instancia).login.situacao == "erro"
 
-    def test_dado_um_host_que_nao_responde_quando_conferir_o_acesso_entao_a_resposta_falha(
+    def test_dado_um_host_que_nao_responde_quando_conferir_o_acesso_entao_a_conexao_falha(
         self,
         criar_instancia: Callable[..., Instancia],
     ) -> None:
-        cliente = ClienteSqlServer(login_timeout=1)
         inalcancavel = criar_instancia(host="192.0.2.1", nome=None, porta=1433)
 
-        try:
-            diagnostico = DiagnosticoService(cliente).conferir_acesso(inalcancavel)
-        finally:
-            cliente.encerrar()
+        diagnostico = DiagnosticoService(ClienteSqlServer(login_timeout=1)).conferir_acesso(inalcancavel)
 
         assert diagnostico.conexao.situacao == "erro"
-
-    def test_dada_uma_sessao_guardada_que_caiu_quando_conferir_o_acesso_entao_um_login_novo_responde(
-        self,
-        servico_de_diagnostico: DiagnosticoService,
-        cliente_sql_server: ClienteSqlServer,
-        instancia_sql_server: Conexao,
-        instancia_no_conteiner: Instancia,
-        derrubar_sessao: Callable[[ClienteSqlServer], None],
-    ) -> None:
-        cliente_sql_server.executar(instancia_sql_server, "SELECT 1")
-        derrubar_sessao(cliente_sql_server)
-
-        assert servico_de_diagnostico.conferir_acesso(instancia_no_conteiner).situacao == "ok"

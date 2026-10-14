@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,8 +9,11 @@ from bakrestorer.infra.sqlserver import ClienteSqlServer
 
 @pytest.fixture
 def cliente_sql_server() -> MagicMock:
-    """Dublê do cliente: cada teste diz o que ele responde ao ping."""
-    return MagicMock(spec=ClienteSqlServer)
+    """Dublê do cliente que responde ao ping em 1 ms, a não ser que o teste diga outra coisa."""
+    cliente = MagicMock(spec=ClienteSqlServer)
+    cliente.ping.return_value = timedelta(milliseconds=1)
+
+    return cliente
 
 
 @pytest.fixture

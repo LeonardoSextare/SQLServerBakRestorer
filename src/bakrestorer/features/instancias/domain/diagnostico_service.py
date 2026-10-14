@@ -1,9 +1,7 @@
 from collections.abc import Iterable
-from datetime import timedelta
-from time import perf_counter
+from concurrent.futures import ThreadPoolExecutor
 
 from bakrestorer.features.instancias.domain.models import Diagnostico, Instancia, Verificacao
-from bakrestorer.features.instancias.domain.queries import PING
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
     Conexao,
@@ -15,7 +13,8 @@ from bakrestorer.infra.sqlserver import (
 class DiagnosticoService:
     """Pergunta às instâncias do SQL Server se elas estão prontas para restaurar.
 
-    Não guarda estado: quem guarda as sessões abertas é o cliente.
+    Não guarda estado, e o cliente também não: cada pergunta abre a própria
+    conexão, e por isso as instâncias podem ser diagnosticadas ao mesmo tempo.
 
     Instância fora do ar e credencial recusada não são falha do diagnóstico:
     são a resposta dele, e voltam como verificações do `Diagnostico`.
@@ -41,23 +40,16 @@ class DiagnosticoService:
     def conferir_acesso(self, instancia: Instancia) -> Diagnostico:
         """Pergunta à instância se ela responde e se o login é aceito.
 
-        A sessão guardada é descartada antes, para o primeiro ping fazer login de
-        novo: ela só prova que a credencial valia quando abriu. A latência sai do
-        segundo ping, que já não carrega o tempo do login.
+        O cliente abre uma conexão só para a pergunta, então o login é sempre de
+        verdade, e não uma sessão antiga que já estava aberta.
 
         Raises:
             ComandoRecusadoError: Se a instância aceitou o login e recusou o
                 ping. Ninguém espera por isso.
 
         """
-        conexao = _montar_conexao(instancia)
-        self._cliente.descartar(conexao)
-
         try:
-            self._cliente.executar(conexao, PING)
-            inicio = perf_counter()
-            self._cliente.executar(conexao, PING)
-            latencia = timedelta(seconds=perf_counter() - inicio)
+            latencia = self._cliente.ping(_montar_conexao(instancia))
         except InstanciaInacessivelError as falha:
             return Diagnostico(
                 id_da_instancia=instancia.id,
@@ -79,17 +71,18 @@ class DiagnosticoService:
         )
 
     def diagnosticar_todas(self, instancias: Iterable[Instancia]) -> tuple[Diagnostico, ...]:
-        """Diagnostica cada instância, na ordem em que vieram.
+        """Diagnostica as instâncias todas ao mesmo tempo, e devolve os diagnósticos na ordem em que vieram.
 
-        Uma depois da outra, porque o cliente não pode ser usado por duas
-        threads ao mesmo tempo.
+        Ao mesmo tempo porque cada uma pode levar o tempo limite inteiro para não
+        responder: em série, a última esperaria pelas outras.
 
         Raises:
             ComandoRecusadoError: Se alguma instância aceitou o login e recusou
                 o ping.
 
         """
-        return tuple(self.diagnosticar(instancia) for instancia in instancias)
+        with ThreadPoolExecutor() as threads:
+            return tuple(threads.map(self.diagnosticar, instancias))
 
 
 def _montar_conexao(instancia: Instancia) -> Conexao:

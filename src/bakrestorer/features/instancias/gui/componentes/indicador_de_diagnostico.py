@@ -23,11 +23,12 @@ def indicador_de_diagnostico(diagnostico: Diagnostico) -> ft.Control:
 
     match diagnostico.situacao:
         case "erro":
-            icone, cor = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR
+            icone, cor = ft.Icons.CANCEL, ft.Colors.RED
+
         case "aviso":
-            icone, cor = ft.Icons.WARNING_AMBER, ft.Colors.TERTIARY
+            icone, cor = ft.Icons.ERROR, ft.Colors.AMBER
         case "ok":
-            icone, cor = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY
+            icone, cor = ft.Icons.CHECK_CIRCLE, ft.Colors.GREEN
 
     return ft.GestureDetector(
         content=ft.Icon(
@@ -80,11 +81,11 @@ def _linha_da_verificacao(nome: str, verificacao: Verificacao, *, complemento: s
     """
     match verificacao.situacao:
         case "ok":
-            icone, cor, situacao = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY, "OK"
+            icone, cor, situacao = ft.Icons.CHECK_CIRCLE, ft.Colors.GREEN, "OK"
         case "aviso":
-            icone, cor, situacao = ft.Icons.WARNING_AMBER, ft.Colors.TERTIARY, "Aviso"
+            icone, cor, situacao = ft.Icons.ERROR, ft.Colors.AMBER, "Aviso"
         case "erro":
-            icone, cor, situacao = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, "Falha"
+            icone, cor, situacao = ft.Icons.CANCEL, ft.Colors.RED, "Falha"
         case "nao_verificado":
             icone, cor, situacao = ft.Icons.REMOVE_CIRCLE_OUTLINE, ft.Colors.ON_SURFACE_VARIANT, "Não verificado"
 
