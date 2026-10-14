@@ -148,7 +148,7 @@ class FormularioViewModel:
 
         São dois `try` porque `gravar` também pode levantar
         `InstanciaInvalidaError`, quando uma instância já gravada está
-        corrompida. Num `try` só, isso apareceria como "Preencha este campo".
+        corrompida. Num `try` só, isso apareceria como "Campo obrigatório".
 
         Raises:
             Exception: O que `gravar` levantar além de `InstanciaJaExisteError`,
@@ -181,9 +181,9 @@ class FormularioViewModel:
         campo não deixa entrar nada além de algarismos.
         """
         if campo == "porta" and self.digitado["porta"].strip():
-            return "Use uma porta de 1 a 65535"
+            return "Porta inválida (1 a 65535)"
 
-        return "Preencha este campo"
+        return "Campo obrigatório"
 
     def _montar_instancia(self) -> Instancia:
         """Transforma o que foi digitado numa instância.

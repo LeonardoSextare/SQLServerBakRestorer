@@ -103,7 +103,7 @@ class ClienteSqlServer:
                 cursor.execute(comando, dict(parametros) if parametros else None)
                 linhas = [] if cursor.description is None else list(cursor.fetchall())
         except pytds.DatabaseError as falha:
-            raise ComandoRecusadoError(conexao.servidor, str(falha)) from falha
+            raise ComandoRecusadoError(conexao.servidor, falha.text) from falha
         except (pytds.Error, OSError) as falha:
             self.descartar(conexao)
             raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
@@ -201,8 +201,8 @@ class ClienteSqlServer:
             )
         except pytds.DatabaseError as falha:
             if falha.msg_no in LOGIN_RECUSADO:
-                raise CredenciaisInvalidasError(conexao.servidor, str(falha)) from falha
+                raise CredenciaisInvalidasError(conexao.servidor, falha.text) from falha
 
-            raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha
+            raise InstanciaInacessivelError(conexao.servidor, falha.text) from falha
         except (pytds.Error, OSError) as falha:
             raise InstanciaInacessivelError(conexao.servidor, str(falha)) from falha

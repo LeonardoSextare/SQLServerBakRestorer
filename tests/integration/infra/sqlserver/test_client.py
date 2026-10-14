@@ -107,6 +107,19 @@ class TestExecutar:
 
         assert falha.value.servidor == instancia_sql_server.servidor
 
+    def test_dada_uma_senha_errada_quando_executar_entao_o_detalhe_e_so_a_mensagem_do_servidor(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with pytest.raises(CredenciaisInvalidasError) as falha:
+            cliente_sql_server.executar(
+                instancia_sql_server.model_copy(update={"senha": "errada"}),
+                "SELECT 1",
+            )
+
+        assert falha.value.detalhe == f"Login failed for user '{instancia_sql_server.usuario}'."
+
     def test_dado_um_host_que_nao_responde_quando_executar_entao_a_falha_e_de_instancia_inacessivel(self) -> None:
         cliente = ClienteSqlServer(login_timeout=1)
         inalcancavel = Conexao(host=HOST_INALCANCAVEL, porta=1433, usuario="sa", senha="segredo")
@@ -123,6 +136,16 @@ class TestExecutar:
     ) -> None:
         with pytest.raises(ComandoRecusadoError):
             cliente_sql_server.executar(instancia_sql_server, "SELECT * FROM tabela_que_nao_existe")
+
+    def test_dado_um_comando_invalido_quando_executar_entao_o_detalhe_e_so_a_mensagem_do_servidor(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with pytest.raises(ComandoRecusadoError) as falha:
+            cliente_sql_server.executar(instancia_sql_server, "SELECT * FROM tabela_que_nao_existe")
+
+        assert falha.value.detalhe == "Invalid object name 'tabela_que_nao_existe'."
 
     def test_dado_um_comando_recusado_quando_executar_de_novo_entao_a_sessao_continua_utilizavel(
         self,

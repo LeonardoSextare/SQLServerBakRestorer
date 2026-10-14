@@ -4,6 +4,7 @@ from collections.abc import Callable
 import flet as ft
 
 from bakrestorer.features.instancias import Instancia
+from bakrestorer.features.instancias.gui.componentes.indicador_de_diagnostico import indicador_de_diagnostico
 from bakrestorer.features.instancias.gui.formulario.view_model import FormularioViewModel, NomeDoCampo
 
 
@@ -73,7 +74,12 @@ def formulario(
     rodape = ft.Row(
         controls=[
             ft.Row(
-                controls=[_botao_de_teste(view_model), _resultado_do_teste(view_model)],
+                controls=[
+                    _botao_de_teste(view_model),
+                    indicador_de_diagnostico(view_model.diagnostico)
+                    if view_model.diagnostico is not None
+                    else ft.Container(),
+                ],
                 spacing=12,
             ),
             ft.Row(
@@ -118,30 +124,6 @@ def _botao_de_teste(view_model: FormularioViewModel) -> ft.Control:
         icon=ft.Icons.NETWORK_CHECK,
         on_click=view_model.testar_conexao,
     )
-
-
-def _resultado_do_teste(view_model: FormularioViewModel) -> ft.Control:
-    """Desenha o resumo do último diagnóstico como um ícone só, com o resto na dica.
-
-    Só o ícone, porque texto no rodapé empurra o Salvar para fora da janela. É
-    provisório: o checklist completo vai abrir ao clicar nele.
-    """
-    diagnostico = view_model.diagnostico
-
-    if diagnostico is None:
-        return ft.Container()
-
-    match diagnostico.situacao:
-        case "erro":
-            falha = diagnostico.conexao if diagnostico.conexao.situacao == "erro" else diagnostico.login
-            icone, cor, dica = ft.Icons.ERROR_OUTLINE, ft.Colors.ERROR, falha.detalhe or "Sem resposta a tempo"
-        case "aviso":
-            icone, cor, dica = ft.Icons.WARNING_AMBER, ft.Colors.TERTIARY, "Há avisos"
-        case "ok":
-            latencia = f" em {diagnostico.latencia.total_seconds() * 1000:.0f} ms" if diagnostico.latencia else ""
-            icone, cor, dica = ft.Icons.CHECK_CIRCLE, ft.Colors.PRIMARY, f"Conectou{latencia}"
-
-    return ft.Icon(icone, size=20, color=cor, tooltip=dica)
 
 
 def _campo_de_texto(
