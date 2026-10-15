@@ -118,13 +118,19 @@ class Diagnostico(BakRestorerModel):
     A verificação que depende de outra que falhou fica não verificada: sem
     resposta não há login, e sem login não há o que perguntar. `latencia` é o
     tempo de ida e volta de um comando, e só existe quando o login passou.
+
+    As permissões de restaurar nascem não verificadas, porque só o diagnóstico
+    completo as confere. Elas são do login da conexão, e não de quem usa o
+    aplicativo.
     """
 
     ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
 
     id_da_instancia: UUID
-    conexao: Verificacao
-    login: Verificacao
+    conexao: Verificacao = Verificacao(situacao="nao_verificado")
+    login: Verificacao = Verificacao(situacao="nao_verificado")
+    criacao_de_banco: Verificacao = Verificacao(situacao="nao_verificado")
+    sobrescrita_de_banco: Verificacao = Verificacao(situacao="nao_verificado")
     latencia: timedelta | None = None
 
     @property
@@ -134,7 +140,12 @@ class Diagnostico(BakRestorerModel):
         O não verificado não entra no resumo: ele só existe porque algo antes
         dele falhou, e essa falha já deu o resumo.
         """
-        situacoes = {self.conexao.situacao, self.login.situacao}
+        situacoes = {
+            self.conexao.situacao,
+            self.login.situacao,
+            self.criacao_de_banco.situacao,
+            self.sobrescrita_de_banco.situacao,
+        }
 
         if "erro" in situacoes:
             return "erro"

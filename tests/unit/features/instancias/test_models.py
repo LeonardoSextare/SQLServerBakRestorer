@@ -233,3 +233,14 @@ class TestSituacao:
         )
 
         assert diagnostico.situacao == resumo
+
+    def test_dada_so_a_sobrescrita_de_banco_com_aviso_quando_resumir_entao_o_resumo_e_aviso(self) -> None:
+        diagnostico = Diagnostico(
+            id_da_instancia=uuid4(),
+            conexao=Verificacao(situacao="ok"),
+            login=Verificacao(situacao="ok"),
+            criacao_de_banco=Verificacao(situacao="ok"),
+            sobrescrita_de_banco=Verificacao(situacao="aviso"),
+        )
+
+        assert diagnostico.situacao == "aviso"

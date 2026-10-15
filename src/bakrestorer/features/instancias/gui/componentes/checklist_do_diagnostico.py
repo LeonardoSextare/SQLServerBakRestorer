@@ -13,21 +13,42 @@ def checklist_do_diagnostico(diagnostico: Diagnostico) -> ft.Control:
 
     return ft.Column(
         controls=[
-            _linha_da_verificacao("Conexão", diagnostico.conexao, complemento=latencia),
+            _linha_da_verificacao(
+                "Conexão",
+                diagnostico.conexao,
+                complemento=latencia,
+                explicacao="Tempo limite de conexão esgotado.",
+            ),
             _linha_da_verificacao("Autenticação", diagnostico.login),
+            _linha_da_verificacao(
+                "Criar banco",
+                diagnostico.criacao_de_banco,
+                explicacao="O login precisa do papel dbcreator ou da permissão CREATE ANY DATABASE.",
+            ),
+            _linha_da_verificacao(
+                "Sobrescrever banco",
+                diagnostico.sobrescrita_de_banco,
+                explicacao="Só bancos de que o login é dono.",
+            ),
         ],
         spacing=12,
         tight=True,
     )
 
 
-def _linha_da_verificacao(nome: str, verificacao: Verificacao, *, complemento: str = "") -> ft.Control:
-    """Desenha uma verificação: o ícone e o nome à esquerda, a situação à direita e, embaixo, o que o servidor disse.
+def _linha_da_verificacao(
+    nome: str,
+    verificacao: Verificacao,
+    *,
+    complemento: str = "",
+    explicacao: str = "",
+) -> ft.Control:
+    """Desenha uma verificação: o ícone e o nome à esquerda, a situação à direita e, embaixo, o que houve.
 
     A situação usa sempre as mesmas palavras, qualquer que seja a verificação,
-    para o checklist ler igual quando ganhar itens novos. O detalhe é
-    selecionável para dar para copiar a mensagem do servidor. O erro sem
-    detalhe é o tempo de espera que acabou sem resposta nenhuma.
+    para o checklist ler igual quando ganhar itens novos. Embaixo vai o que o
+    servidor disse e, quando ele não disse nada, a `explicacao` de quem desenha
+    a linha, só em aviso e falha. O texto é selecionável para dar para copiar.
     """
     match verificacao.situacao:
         case "ok":
@@ -41,8 +62,8 @@ def _linha_da_verificacao(nome: str, verificacao: Verificacao, *, complemento: s
 
     detalhe = verificacao.detalhe
 
-    if verificacao.situacao == "erro" and not detalhe:
-        detalhe = "Tempo limite de conexão esgotado."
+    if verificacao.situacao in ("erro", "aviso") and not detalhe:
+        detalhe = explicacao
 
     linha = ft.Row(
         controls=[

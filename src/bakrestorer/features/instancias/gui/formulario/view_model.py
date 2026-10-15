@@ -116,14 +116,14 @@ class FormularioViewModel:
         self.diagnostico = None
 
     async def testar_conexao(self) -> None:
-        """Pergunta à instância digitada se ela responde, sem salvar nada.
+        """Diagnostica a instância digitada, sem salvar nada.
 
         O teste sai numa thread porque espera a rede, e esperar aqui travaria a
         janela pelo tempo do login.
 
         Raises:
             ComandoRecusadoError: Se a instância aceitou o login e recusou o
-                ping. Ninguém espera por isso.
+                ping ou a consulta das permissões. Ninguém espera por isso.
 
         """
         try:
@@ -136,7 +136,7 @@ class FormularioViewModel:
         self.testando = True
 
         try:
-            self.diagnostico = await asyncio.to_thread(diagnostico_service().conferir_acesso_a_instancia, instancia)
+            self.diagnostico = await asyncio.to_thread(diagnostico_service().diagnosticar, instancia)
         finally:
             self.testando = False
 

@@ -9,9 +9,10 @@ from bakrestorer.infra.sqlserver import ClienteSqlServer
 
 @pytest.fixture
 def cliente_sql_server() -> MagicMock:
-    """Dublê do cliente que responde ao ping em 1 ms, a não ser que o teste diga outra coisa."""
+    """Dublê do cliente: o ping responde em 1 ms e o login pode tudo, a não ser que o teste diga outra coisa."""
     cliente = MagicMock(spec=ClienteSqlServer)
     cliente.ping.return_value = timedelta(milliseconds=1)
+    cliente.executar.return_value = [{"sysadmin": 1, "dbcreator": 1, "cria_banco": 1}]
 
     return cliente
 

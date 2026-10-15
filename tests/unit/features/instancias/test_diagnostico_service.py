@@ -125,3 +125,70 @@ class TestDiagnosticar:
         diagnostico = servico_de_diagnostico.diagnosticar(instancia)
 
         assert (diagnostico.id_da_instancia, diagnostico.situacao) == (instancia.id, "ok")
+
+    def test_dada_uma_credencial_recusada_quando_diagnosticar_entao_as_permissoes_nao_sao_conferidas(
+        self,
+        servico_de_diagnostico: DiagnosticoService,
+        cliente_sql_server: MagicMock,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        cliente_sql_server.ping.side_effect = CredenciaisInvalidasError("localhost\\SQLEXPRESS", "login falhou")
+
+        diagnostico = servico_de_diagnostico.diagnosticar(criar_instancia())
+
+        assert (diagnostico.criacao_de_banco.situacao, diagnostico.sobrescrita_de_banco.situacao) == (
+            "nao_verificado",
+            "nao_verificado",
+        )
+        cliente_sql_server.executar.assert_not_called()
+
+
+class TestConferirPermissoesDaInstancia:
+    """Cobre `conferir_permissoes_da_instancia`."""
+
+    @pytest.mark.parametrize(
+        ("permissoes", "criacao_e_sobrescrita"),
+        [
+            ({"sysadmin": 1, "dbcreator": 0, "cria_banco": 1}, ("ok", "ok")),
+            ({"sysadmin": 0, "dbcreator": 1, "cria_banco": 1}, ("ok", "ok")),
+            ({"sysadmin": 0, "dbcreator": 0, "cria_banco": 1}, ("ok", "aviso")),
+            ({"sysadmin": 0, "dbcreator": 0, "cria_banco": 0}, ("erro", "aviso")),
+        ],
+        ids=["sysadmin", "dbcreator", "so_cria_banco", "sem_permissao"],
+    )
+    def test_dadas_as_permissoes_do_login_quando_conferir_entao_criar_e_sobrescrever_banco_seguem_elas(
+        self,
+        servico_de_diagnostico: DiagnosticoService,
+        cliente_sql_server: MagicMock,
+        criar_instancia: Callable[..., Instancia],
+        permissoes: dict[str, int],
+        criacao_e_sobrescrita: tuple[str, str],
+    ) -> None:
+        cliente_sql_server.executar.return_value = [permissoes]
+
+        criacao, sobrescrita = servico_de_diagnostico.conferir_permissoes_da_instancia(criar_instancia())
+
+        assert (criacao.situacao, sobrescrita.situacao) == criacao_e_sobrescrita
+
+    def test_dada_uma_instancia_que_nao_responde_quando_conferir_entao_as_permissoes_nao_sao_verificadas(
+        self,
+        servico_de_diagnostico: DiagnosticoService,
+        cliente_sql_server: MagicMock,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        cliente_sql_server.executar.side_effect = InstanciaInacessivelError("localhost\\SQLEXPRESS", "caiu")
+
+        criacao, sobrescrita = servico_de_diagnostico.conferir_permissoes_da_instancia(criar_instancia())
+
+        assert (criacao.situacao, sobrescrita.situacao) == ("nao_verificado", "nao_verificado")
+
+    def test_dada_a_consulta_recusada_quando_conferir_entao_a_falha_sobe(
+        self,
+        servico_de_diagnostico: DiagnosticoService,
+        cliente_sql_server: MagicMock,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        cliente_sql_server.executar.side_effect = ComandoRecusadoError("localhost\\SQLEXPRESS", "recusado")
+
+        with pytest.raises(ComandoRecusadoError):
+            servico_de_diagnostico.conferir_permissoes_da_instancia(criar_instancia())

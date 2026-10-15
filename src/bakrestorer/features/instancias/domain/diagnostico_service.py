@@ -1,4 +1,5 @@
 from bakrestorer.features.instancias.domain.models import Diagnostico, Instancia, Verificacao
+from bakrestorer.features.instancias.domain.queries import PERMISSOES_DE_RESTAURACAO
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
     Conexao,
@@ -23,16 +24,23 @@ class DiagnosticoService:
     def diagnosticar(self, instancia: Instancia) -> Diagnostico:
         """Pergunta à instância tudo que decide se ela está pronta para restaurar.
 
-        Hoje é só o acesso. As outras checagens entram aqui, depois dele, porque
-        precisam do login que ele faz. Elas rodam todas, mesmo quando uma falha,
-        para o checklist mostrar de uma vez tudo que está errado.
+        Reúne as conferências na ordem em que uma depende da outra: primeiro o
+        acesso e, só com o login aceito, as permissões dele.
 
         Raises:
             ComandoRecusadoError: Se a instância aceitou o login e recusou o
-                ping. Ninguém espera por isso.
+                ping ou a consulta das permissões. Ninguém espera por isso.
 
         """
-        return self.conferir_acesso_a_instancia(instancia)
+        diagnostico = self.conferir_acesso_a_instancia(instancia)
+
+        if diagnostico.login.situacao != "ok":
+            return diagnostico
+
+        permissoes = self.conferir_permissoes_da_instancia(instancia)
+        diagnostico.criacao_de_banco, diagnostico.sobrescrita_de_banco = permissoes
+
+        return diagnostico
 
     def conferir_acesso_a_instancia(self, instancia: Instancia) -> Diagnostico:
         """Pergunta à instância se ela responde e se o login é aceito.
@@ -51,7 +59,6 @@ class DiagnosticoService:
             return Diagnostico(
                 id_da_instancia=instancia.id,
                 conexao=Verificacao(situacao="erro", detalhe=falha.detalhe),
-                login=Verificacao(situacao="nao_verificado"),
             )
         except CredenciaisInvalidasError as falha:
             return Diagnostico(
@@ -65,6 +72,36 @@ class DiagnosticoService:
             conexao=Verificacao(situacao="ok"),
             login=Verificacao(situacao="ok"),
             latencia=latencia,
+        )
+
+    def conferir_permissoes_da_instancia(self, instancia: Instancia) -> tuple[Verificacao, Verificacao]:
+        """Pergunta se o login da instância pode criar banco e sobrescrever banco, nessa ordem.
+
+        As duas saem de uma consulta só. Criar banco basta com `sysadmin`,
+        `dbcreator` ou `CREATE ANY DATABASE`. Sobrescrever qualquer banco pede
+        `sysadmin` ou `dbcreator`; sem eles o login só sobrescreve os bancos de
+        que é dono, e isso é aviso, porque o banco de destino só aparece na hora
+        de restaurar.
+
+        Se a instância não responder ou recusar o login, as duas ficam não
+        verificadas: quem conta essa falha é a conferência do acesso.
+
+        Raises:
+            ComandoRecusadoError: Se a instância aceitou o login e recusou a
+                consulta. Ninguém espera por isso.
+
+        """
+        try:
+            permissoes = self._cliente.executar(_montar_conexao(instancia), PERMISSOES_DE_RESTAURACAO)[0]
+        except InstanciaInacessivelError, CredenciaisInvalidasError:
+            return Verificacao(situacao="nao_verificado"), Verificacao(situacao="nao_verificado")
+
+        papel_de_restaurar = bool(permissoes["sysadmin"]) or bool(permissoes["dbcreator"])
+        pode_criar_banco = papel_de_restaurar or bool(permissoes["cria_banco"])
+
+        return (
+            Verificacao(situacao="ok" if pode_criar_banco else "erro"),
+            Verificacao(situacao="ok" if papel_de_restaurar else "aviso"),
         )
 
 
