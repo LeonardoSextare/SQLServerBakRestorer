@@ -136,7 +136,7 @@ class FormularioViewModel:
         self.testando = True
 
         try:
-            self.diagnostico = await asyncio.to_thread(diagnostico_service().conferir_acesso, instancia)
+            self.diagnostico = await asyncio.to_thread(diagnostico_service().conferir_acesso_a_instancia, instancia)
         finally:
             self.testando = False
 

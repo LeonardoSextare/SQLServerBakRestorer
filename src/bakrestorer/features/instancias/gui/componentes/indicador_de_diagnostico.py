@@ -6,13 +6,20 @@ from bakrestorer.features.instancias import Diagnostico, Verificacao
 
 
 @ft.component
-def indicador_de_diagnostico(diagnostico: Diagnostico) -> ft.Control:
+def indicador_de_diagnostico(
+    diagnostico: Diagnostico,
+    *,
+    icone: ft.IconData | None = None,
+    tamanho: int = 20,
+) -> ft.Control:
     """Desenha o resumo do diagnóstico num ícone que, clicado, abre o checklist completo.
 
     Só o ícone, para caber onde não sobra espaço, como o rodapé do formulário e
-    o cartão da lista. O componente guarda se o mouse está em cima e se o
-    checklist está aberto: é estado só da tela, e por isso não vai para um view
-    model.
+    o cartão da lista. Sem `icone`, o desenho é o da própria situação; com ele, é
+    esse ícone pintado na cor da situação, como o servidor no cartão da lista.
+
+    O componente guarda se o mouse está em cima e se o checklist está aberto: é
+    estado só da tela, e por isso não vai para um view model.
     """
     posicao_do_mouse, marcar_posicao_do_mouse = ft.use_state("fora")
     checklist, marcar_checklist = ft.use_state("fechado")
@@ -23,17 +30,16 @@ def indicador_de_diagnostico(diagnostico: Diagnostico) -> ft.Control:
 
     match diagnostico.situacao:
         case "erro":
-            icone, cor = ft.Icons.CANCEL, ft.Colors.RED
-
+            icone_da_situacao, cor = ft.Icons.CANCEL, ft.Colors.RED
         case "aviso":
-            icone, cor = ft.Icons.ERROR, ft.Colors.AMBER
+            icone_da_situacao, cor = ft.Icons.ERROR, ft.Colors.AMBER
         case "ok":
-            icone, cor = ft.Icons.CHECK_CIRCLE, ft.Colors.GREEN
+            icone_da_situacao, cor = ft.Icons.CHECK_CIRCLE, ft.Colors.GREEN
 
     return ft.GestureDetector(
         content=ft.Icon(
-            icone,
-            size=20,
+            icone or icone_da_situacao,
+            size=tamanho,
             color=cor,
             scale=1.2 if posicao_do_mouse == "em_cima" else 1,
             animate_scale=ft.Animation(duration=150, curve=ft.AnimationCurve.EASE_OUT),

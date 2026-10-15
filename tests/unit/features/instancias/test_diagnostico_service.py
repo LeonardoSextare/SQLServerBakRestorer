@@ -12,8 +12,8 @@ from bakrestorer.infra.sqlserver import (
 )
 
 
-class TestConferirAcesso:
-    """Cobre `conferir_acesso`."""
+class TestConferirAcessoAInstancia:
+    """Cobre `conferir_acesso_a_instancia`."""
 
     def test_dada_uma_instancia_que_responde_ao_ping_quando_conferir_o_acesso_entao_a_conexao_e_o_login_passam(
         self,
@@ -22,7 +22,7 @@ class TestConferirAcesso:
     ) -> None:
         instancia = criar_instancia()
 
-        diagnostico = servico_de_diagnostico.conferir_acesso(instancia)
+        diagnostico = servico_de_diagnostico.conferir_acesso_a_instancia(instancia)
 
         assert (diagnostico.id_da_instancia, diagnostico.conexao.situacao, diagnostico.login.situacao) == (
             instancia.id,
@@ -38,7 +38,9 @@ class TestConferirAcesso:
     ) -> None:
         cliente_sql_server.ping.return_value = timedelta(milliseconds=7)
 
-        assert servico_de_diagnostico.conferir_acesso(criar_instancia()).latencia == timedelta(milliseconds=7)
+        diagnostico = servico_de_diagnostico.conferir_acesso_a_instancia(criar_instancia())
+
+        assert diagnostico.latencia == timedelta(milliseconds=7)
 
     def test_dada_uma_instancia_sem_resposta_quando_conferir_o_acesso_entao_a_conexao_falha_e_o_login_nao_e_verificado(
         self,
@@ -48,7 +50,7 @@ class TestConferirAcesso:
     ) -> None:
         cliente_sql_server.ping.side_effect = InstanciaInacessivelError("localhost\\SQLEXPRESS", "sem resposta")
 
-        diagnostico = servico_de_diagnostico.conferir_acesso(criar_instancia())
+        diagnostico = servico_de_diagnostico.conferir_acesso_a_instancia(criar_instancia())
 
         assert (diagnostico.conexao, diagnostico.login.situacao, diagnostico.latencia) == (
             Verificacao(situacao="erro", detalhe="sem resposta"),
@@ -64,7 +66,7 @@ class TestConferirAcesso:
     ) -> None:
         cliente_sql_server.ping.side_effect = CredenciaisInvalidasError("localhost\\SQLEXPRESS", "login falhou")
 
-        diagnostico = servico_de_diagnostico.conferir_acesso(criar_instancia())
+        diagnostico = servico_de_diagnostico.conferir_acesso_a_instancia(criar_instancia())
 
         assert (diagnostico.conexao.situacao, diagnostico.login, diagnostico.latencia) == (
             "ok",
@@ -81,7 +83,7 @@ class TestConferirAcesso:
         cliente_sql_server.ping.side_effect = ComandoRecusadoError("localhost\\SQLEXPRESS", "recusado")
 
         with pytest.raises(ComandoRecusadoError):
-            servico_de_diagnostico.conferir_acesso(criar_instancia())
+            servico_de_diagnostico.conferir_acesso_a_instancia(criar_instancia())
 
     @pytest.mark.parametrize(
         ("campos", "conexao_esperada"),
@@ -105,7 +107,7 @@ class TestConferirAcesso:
         campos: dict[str, object],
         conexao_esperada: Conexao,
     ) -> None:
-        servico_de_diagnostico.conferir_acesso(criar_instancia(**campos))
+        servico_de_diagnostico.conferir_acesso_a_instancia(criar_instancia(**campos))
 
         cliente_sql_server.ping.assert_called_once_with(conexao_esperada)
 
@@ -123,31 +125,3 @@ class TestDiagnosticar:
         diagnostico = servico_de_diagnostico.diagnosticar(instancia)
 
         assert (diagnostico.id_da_instancia, diagnostico.situacao) == (instancia.id, "ok")
-
-
-class TestDiagnosticarTodas:
-    """Cobre `diagnosticar_todas`."""
-
-    def test_dadas_varias_instancias_quando_diagnosticar_todas_entao_cada_uma_tem_o_seu_diagnostico_na_mesma_ordem(
-        self,
-        servico_de_diagnostico: DiagnosticoService,
-        cliente_sql_server: MagicMock,
-        criar_instancia: Callable[..., Instancia],
-    ) -> None:
-        prod = criar_instancia("PROD", host="prod")
-        homolog = criar_instancia("HOMOLOG", host="homolog")
-
-        def responder(conexao: Conexao) -> timedelta:
-            if conexao.host == "homolog":
-                raise InstanciaInacessivelError(conexao.servidor, "")
-
-            return timedelta(milliseconds=1)
-
-        cliente_sql_server.ping.side_effect = responder
-
-        diagnosticos = servico_de_diagnostico.diagnosticar_todas([prod, homolog])
-
-        assert [(diagnostico.id_da_instancia, diagnostico.situacao) for diagnostico in diagnosticos] == [
-            (prod.id, "ok"),
-            (homolog.id, "erro"),
-        ]

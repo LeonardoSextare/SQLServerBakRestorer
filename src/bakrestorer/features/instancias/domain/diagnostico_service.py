@@ -1,6 +1,3 @@
-from collections.abc import Iterable
-from concurrent.futures import ThreadPoolExecutor
-
 from bakrestorer.features.instancias.domain.models import Diagnostico, Instancia, Verificacao
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
@@ -35,9 +32,9 @@ class DiagnosticoService:
                 ping. Ninguém espera por isso.
 
         """
-        return self.conferir_acesso(instancia)
+        return self.conferir_acesso_a_instancia(instancia)
 
-    def conferir_acesso(self, instancia: Instancia) -> Diagnostico:
+    def conferir_acesso_a_instancia(self, instancia: Instancia) -> Diagnostico:
         """Pergunta à instância se ela responde e se o login é aceito.
 
         O cliente abre uma conexão só para a pergunta, então o login é sempre de
@@ -69,20 +66,6 @@ class DiagnosticoService:
             login=Verificacao(situacao="ok"),
             latencia=latencia,
         )
-
-    def diagnosticar_todas(self, instancias: Iterable[Instancia]) -> tuple[Diagnostico, ...]:
-        """Diagnostica as instâncias todas ao mesmo tempo, e devolve os diagnósticos na ordem em que vieram.
-
-        Ao mesmo tempo porque cada uma pode levar o tempo limite inteiro para não
-        responder: em série, a última esperaria pelas outras.
-
-        Raises:
-            ComandoRecusadoError: Se alguma instância aceitou o login e recusou
-                o ping.
-
-        """
-        with ThreadPoolExecutor() as threads:
-            return tuple(threads.map(self.diagnosticar, instancias))
 
 
 def _montar_conexao(instancia: Instancia) -> Conexao:

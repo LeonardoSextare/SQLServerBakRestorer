@@ -1,6 +1,8 @@
 import flet as ft
 
 from bakrestorer.features.instancias import Instancia
+from bakrestorer.features.instancias.gui.componentes.indicador_de_diagnostico import indicador_de_diagnostico
+from bakrestorer.features.instancias.gui.diagnosticos.view_model import CONTEXTO_DOS_DIAGNOSTICOS, DiagnosticosViewModel
 from bakrestorer.features.instancias.gui.formulario import formulario
 from bakrestorer.features.instancias.gui.view_model import InstanciasViewModel
 
@@ -27,20 +29,26 @@ def secao_instancias() -> ft.Control:
 
     A confirmação de remover é pedida a cada desenho: o `use_dialog` mantém o
     diálogo aberto enquanto recebe um, e fecha quando recebe None.
+
+    Os diagnósticos chegam pelo contexto que a moldura provê, porque duram o
+    aplicativo inteiro e não só esta seção. Salvar uma instância a diagnostica de
+    novo, e remover esquece o resultado dela. Quem junta as duas coisas é este
+    componente: o view model da seção não sabe que o diagnóstico existe.
     """
     view_model, _ = ft.use_state(InstanciasViewModel())
+    diagnosticos = ft.use_context(CONTEXTO_DOS_DIAGNOSTICOS)
 
     ft.use_effect(view_model.carregar, [])
     ft.use_dialog(
-        _confirmacao_de_remocao(view_model, view_model.instancia_a_remover)
+        _confirmacao_de_remocao(view_model, diagnosticos, view_model.instancia_a_remover)
         if view_model.instancia_a_remover is not None
         else None,
     )
 
     if view_model.formulario_aberto:
-        return _painel_do_formulario(view_model)
+        return _painel_do_formulario(view_model, diagnosticos)
 
-    return _lista_de_instancias(view_model)
+    return _lista_de_instancias(view_model, diagnosticos)
 
 
 def _cabecalho_da_secao(icone: ft.Control, titulo: str, *, botao: ft.Control | None = None) -> ft.Control:
@@ -58,7 +66,7 @@ def _cabecalho_da_secao(icone: ft.Control, titulo: str, *, botao: ft.Control | N
     )
 
 
-def _lista_de_instancias(view_model: InstanciasViewModel) -> ft.Control:
+def _lista_de_instancias(view_model: InstanciasViewModel, diagnosticos: DiagnosticosViewModel) -> ft.Control:
     """Desenha o cabeçalho com o botão de adicionar e, abaixo dele, os cartões ou o convite.
 
     O botão desce 2 pixels de propósito. O olho lê o título pelo miolo das
@@ -82,10 +90,10 @@ def _lista_de_instancias(view_model: InstanciasViewModel) -> ft.Control:
         ),
     )
 
-    return ft.Column(controls=[cabecalho, _cartoes_ou_convite(view_model)], spacing=3, expand=True)
+    return ft.Column(controls=[cabecalho, _cartoes_ou_convite(view_model, diagnosticos)], spacing=3, expand=True)
 
 
-def _cartoes_ou_convite(view_model: InstanciasViewModel) -> ft.Control:
+def _cartoes_ou_convite(view_model: InstanciasViewModel, diagnosticos: DiagnosticosViewModel) -> ft.Control:
     """Desenha os cartões das instâncias, ou o convite quando ainda não há nenhuma."""
     cadastro = view_model.cadastro
 
@@ -93,7 +101,7 @@ def _cartoes_ou_convite(view_model: InstanciasViewModel) -> ft.Control:
         return _convite_para_cadastrar()
 
     cartoes = [
-        _cartao_da_instancia(view_model, instancia, padrao=instancia.id == cadastro.padrao)
+        _cartao_da_instancia(view_model, diagnosticos, instancia, padrao=instancia.id == cadastro.padrao)
         for instancia in cadastro.itens
     ]
     return ft.Column(controls=cartoes, spacing=3, scroll=ft.ScrollMode.AUTO, expand=True)
@@ -123,13 +131,24 @@ def _convite_para_cadastrar() -> ft.Control:
     )
 
 
-def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, *, padrao: bool) -> ft.Control:
+def _cartao_da_instancia(
+    view_model: InstanciasViewModel,
+    diagnosticos: DiagnosticosViewModel,
+    instancia: Instancia,
+    *,
+    padrao: bool,
+) -> ft.Control:
     """Desenha o cartão de uma instância. Clicar nele abre a edição.
 
-    A padrão leva o selo "Padrão" ao lado do nome. O menu fica em todos os
-    cartões, e é ali que moram as ações do cartão: definir como padrão, que fica
-    desabilitado na que já é, e remover.
+    À esquerda fica o diagnóstico da instância. A padrão leva o selo "Padrão" ao
+    lado do nome. O menu fica em todos os cartões, e é ali que moram as ações do
+    cartão: testar a conexão, que fica desabilitado enquanto ela já está sendo
+    testada; definir como padrão, desabilitado na que já é; e remover.
     """
+
+    async def testar_conexao() -> None:
+        await diagnosticos.diagnosticar_instancias((instancia,))
+
     selo_de_padrao = ft.Container(
         content=ft.Text("Padrão", size=10.5, weight=ft.FontWeight.W_600, color=ft.Colors.PRIMARY),
         bgcolor=ft.Colors.with_opacity(0.12, ft.Colors.PRIMARY),
@@ -150,6 +169,14 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
         shape=ft.RoundedRectangleBorder(radius=10),
         items=[
             ft.PopupMenuItem(
+                content=ft.Text("Testar conexão", size=14),
+                icon=ft.Icon(ft.Icons.NETWORK_CHECK, size=19),
+                height=38,
+                padding=ft.Padding.symmetric(horizontal=14),
+                disabled=instancia.id in diagnosticos.testando,
+                on_click=testar_conexao,
+            ),
+            ft.PopupMenuItem(
                 content=ft.Text("Definir como padrão", size=14),
                 icon=ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, size=19),
                 height=38,
@@ -169,7 +196,7 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
 
     return ft.Card(
         content=ft.ListTile(
-            leading=ft.Icon(ft.Icons.STORAGE, size=20, color=ft.Colors.PRIMARY),
+            leading=_situacao_da_instancia(diagnosticos, instancia),
             title=ft.Row(controls=[nome, selo_de_padrao] if padrao else [nome], spacing=8, tight=True),
             subtitle=ft.Text(f"{nome_ou_porta} · {instancia.usuario}", size=13, opacity=0.7),
             trailing=menu,
@@ -180,12 +207,52 @@ def _cartao_da_instancia(view_model: InstanciasViewModel, instancia: Instancia, 
     )
 
 
-def _confirmacao_de_remocao(view_model: InstanciasViewModel, instancia: Instancia) -> ft.AlertDialog:
+def _situacao_da_instancia(diagnosticos: DiagnosticosViewModel, instancia: Instancia) -> ft.Control:
+    """Desenha o servidor na cor da situação dele, com um anel girando em volta enquanto ele é testado.
+
+    O servidor nunca troca de forma: o teste é um anel por cima dele, e o
+    resultado é a cor que ele ganha. Assim nada vira outra coisa de repente.
+    Antes do primeiro resultado ele fica apagado. Num teste de novo, ele guarda
+    a cor do resultado anterior até chegar o novo.
+    """
+    diagnostico = diagnosticos.diagnosticos.get(instancia.id)
+
+    if diagnostico is None:
+        servidor = ft.Icon(ft.Icons.STORAGE, size=23, color=ft.Colors.ON_SURFACE_VARIANT, opacity=0.4)
+    else:
+        servidor = indicador_de_diagnostico(diagnostico, icone=ft.Icons.STORAGE, tamanho=23)
+
+    anel = ft.Container(
+        content=ft.ProgressRing(width=34, height=34, stroke_width=2),
+        opacity=1 if instancia.id in diagnosticos.testando else 0,
+        animate_opacity=ft.Animation(duration=250, curve=ft.AnimationCurve.EASE_OUT),
+    )
+
+    return ft.Stack(
+        controls=[anel, ft.Container(content=servidor, width=34, height=34, alignment=ft.Alignment.CENTER)],
+        width=34,
+        height=34,
+    )
+
+
+def _confirmacao_de_remocao(
+    view_model: InstanciasViewModel,
+    diagnosticos: DiagnosticosViewModel,
+    instancia: Instancia,
+) -> ft.AlertDialog:
     """Desenha o diálogo que pede confirmação antes de tirar a instância do cadastro.
 
     Além da pergunta, o texto diz o que não acontece: quem lê "remover
     instância" pode achar que a instância ou os bancos somem do SQL Server.
+
+    Remover também esquece o diagnóstico da instância, que não tem mais cartão
+    onde aparecer.
     """
+
+    def remover() -> None:
+        view_model.confirmar_remocao()
+        diagnosticos.esquecer(instancia.id)
+
     pergunta = ft.Text(
         spans=[
             ft.TextSpan(text="Tem certeza de que deseja remover "),
@@ -230,7 +297,7 @@ def _confirmacao_de_remocao(view_model: InstanciasViewModel, instancia: Instanci
             ft.FilledButton(
                 content="Remover",
                 style=ft.ButtonStyle(bgcolor=ft.Colors.ERROR, color=ft.Colors.ON_ERROR),
-                on_click=lambda _: view_model.confirmar_remocao(),
+                on_click=lambda _: remover(),
             ),
         ],
         shape=ft.RoundedRectangleBorder(radius=20),
@@ -238,12 +305,21 @@ def _confirmacao_de_remocao(view_model: InstanciasViewModel, instancia: Instanci
     )
 
 
-def _painel_do_formulario(view_model: InstanciasViewModel) -> ft.Control:
+def _painel_do_formulario(view_model: InstanciasViewModel, diagnosticos: DiagnosticosViewModel) -> ft.Control:
     """Desenha o formulário no lugar da lista, com a seta para voltar no cabeçalho.
 
     O formulário recebe toda a altura que sobra abaixo do cabeçalho, para
     prender o rodapé dele embaixo.
+
+    Salvar diagnostica de novo a instância salva, porque o endereço ou a
+    credencial podem ter mudado. O diagnóstico é disparado sem esperar: salvar é
+    síncrono, e o cartão mostra o resultado quando ele chegar.
     """
+
+    def salvar_e_diagnosticar(instancia: Instancia) -> None:
+        view_model.salvar(instancia)
+        ft.context.page.run_task(diagnosticos.diagnosticar_instancias, (instancia,))
+
     titulo = "Nova instância" if view_model.instancia_em_edicao is None else "Editar instância"
 
     cabecalho = _cabecalho_da_secao(
@@ -261,7 +337,7 @@ def _painel_do_formulario(view_model: InstanciasViewModel) -> ft.Control:
             ft.Container(
                 content=formulario(
                     view_model.instancia_em_edicao,
-                    ao_salvar=view_model.salvar,
+                    ao_salvar=salvar_e_diagnosticar,
                     ao_cancelar=view_model.fechar_formulario,
                 ),
                 padding=ft.Padding.only(left=2, right=8, top=8, bottom=4),
