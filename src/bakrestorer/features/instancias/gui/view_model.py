@@ -22,12 +22,16 @@ class InstanciasViewModel:
     `instancia_a_remover` qual instância o usuário quer tirar, e a tela pede a
     confirmação enquanto ela estiver ali. Quem tira de fato é o
     `confirmar_remocao`.
+
+    `instancia_em_detalhe` é a instância com os detalhes abertos, e a tela
+    mostra o diálogo dela enquanto ela estiver ali.
     """
 
     cadastro: ConfigInstancias | None = None
     formulario_aberto: bool = False
     instancia_em_edicao: Instancia | None = None
     instancia_a_remover: Instancia | None = None
+    instancia_em_detalhe: Instancia | None = None
 
     def carregar(self) -> None:
         """Lê do disco o que está cadastrado.
@@ -47,6 +51,14 @@ class InstanciasViewModel:
         """Abre o formulário preenchido com uma instância já cadastrada."""
         self.instancia_em_edicao = instancia
         self.formulario_aberto = True
+
+    def abrir_detalhes(self, instancia: Instancia) -> None:
+        """Mostra o que está cadastrado na instância e o diagnóstico dela."""
+        self.instancia_em_detalhe = instancia
+
+    def fechar_detalhes(self) -> None:
+        """Fecha os detalhes da instância."""
+        self.instancia_em_detalhe = None
 
     def fechar_formulario(self) -> None:
         """Fecha o formulário sem guardar nada."""
