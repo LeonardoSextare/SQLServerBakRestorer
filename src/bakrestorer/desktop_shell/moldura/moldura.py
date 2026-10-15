@@ -5,6 +5,7 @@ import flet as ft
 from bakrestorer.desktop_shell.moldura.componentes.barra_titulo import barra_titulo
 from bakrestorer.desktop_shell.moldura.view_model import CONTEXTO_DA_JANELA, JanelaViewModel, Tela
 from bakrestorer.desktop_shell.telas.config.tela import tela_config
+from bakrestorer.features.instancias.gui import CONTEXTO_DOS_DIAGNOSTICOS, DiagnosticosViewModel
 
 TELAS: dict[Tela, Callable[[], ft.Control]] = {
     Tela.RESTAURACAO: lambda: ft.Text("Tela de restauração"),
@@ -38,8 +39,15 @@ def moldura(view_model: JanelaViewModel) -> ft.Control:
         é durante essa chamada que o view model fica publicado, e é ali que os
         componentes abaixo conseguem alcançá-lo.
 
+        Os diagnósticos das instâncias também nascem aqui, num contexto por
+        fora do da janela: a moldura é a única parte da tela que vive o
+        aplicativo inteiro, e eles precisam durar isso para mais de uma tela
+        ler. Eles são da feature de instâncias; a moldura só os cria, os
+        transmite e pede o primeiro diagnóstico, uma vez, ao abrir.
+
     """
     pagina = ft.context.page
+    diagnosticos, _ = ft.use_state(DiagnosticosViewModel())
 
     def aplicar_tema() -> None:
         view_model.tema.aplicar(pagina)
@@ -55,5 +63,9 @@ def moldura(view_model: JanelaViewModel) -> ft.Control:
         )
 
     ft.use_effect(aplicar_tema, [view_model.tema])
+    ft.use_effect(diagnosticos.diagnosticar_instancias_cadastradas, [])
 
-    return CONTEXTO_DA_JANELA(view_model, quadro)
+    def quadro_com_a_janela() -> ft.Control:
+        return CONTEXTO_DA_JANELA(view_model, quadro)
+
+    return CONTEXTO_DOS_DIAGNOSTICOS(diagnosticos, quadro_com_a_janela)

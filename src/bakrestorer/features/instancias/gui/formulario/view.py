@@ -4,6 +4,7 @@ from collections.abc import Callable
 import flet as ft
 
 from bakrestorer.features.instancias import Instancia
+from bakrestorer.features.instancias.gui.componentes.indicador_de_diagnostico import indicador_de_diagnostico
 from bakrestorer.features.instancias.gui.formulario.view_model import FormularioViewModel, NomeDoCampo
 
 
@@ -15,9 +16,9 @@ def formulario(
 ) -> ft.Control:
     """Os campos de uma instância e, embaixo, o rodapé com os botões.
 
-    No rodapé, Testar conexão fica sozinho à esquerda, longe de Cancelar e
-    Salvar: ele confere a instância, e não fecha o formulário. Por enquanto ele
-    só existe desabilitado -- o diagnóstico ainda não foi escrito.
+    No rodapé, Testar conexão fica à esquerda, longe de Cancelar e Salvar: ele
+    confere a instância, e não fecha o formulário. A resposta dele aparece ao
+    lado, porque a janela não tem altura sobrando para um painel.
 
     Não conhece quem o usa: recebe a instância em edição, ou None para uma
     nova, e as funções que gravam e que fecham. Assim serve em qualquer tela
@@ -50,7 +51,7 @@ def formulario(
             ft.Row(
                 controls=[
                     _campo_de_texto(view_model, "host", "Host", ft.Icons.DNS_OUTLINED),
-                    _campo_de_texto(view_model, "nome", "Instância", ft.Icons.STORAGE),
+                    _campo_da_instancia(view_model),
                 ],
                 spacing=10,
             ),
@@ -72,11 +73,14 @@ def formulario(
 
     rodape = ft.Row(
         controls=[
-            ft.OutlinedButton(
-                content="Testar conexão",
-                icon=ft.Icons.NETWORK_CHECK,
-                disabled=True,
-                tooltip="Em breve",
+            ft.Row(
+                controls=[
+                    _botao_de_teste(view_model),
+                    indicador_de_diagnostico(view_model.diagnostico)
+                    if view_model.diagnostico is not None
+                    else ft.Container(),
+                ],
+                spacing=12,
             ),
             ft.Row(
                 controls=[
@@ -96,13 +100,42 @@ def formulario(
     return ft.Column(controls=[campos, rodape], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
 
 
+def _botao_de_teste(view_model: FormularioViewModel) -> ft.Control:
+    """Desenha o botão de testar a conexão, que gira e fica desabilitado enquanto testa.
+
+    Ele só tem os dois estados: o resultado não mora nele, para o botão voltar a
+    dizer o que faz assim que o teste termina.
+    """
+    if view_model.testando:
+        return ft.OutlinedButton(
+            content=ft.Row(
+                controls=[
+                    ft.ProgressRing(width=14, height=14, stroke_width=2),
+                    ft.Text("Testando…"),
+                ],
+                spacing=8,
+                tight=True,
+            ),
+            disabled=True,
+        )
+
+    return ft.OutlinedButton(
+        content="Testar conexão",
+        icon=ft.Icons.NETWORK_CHECK,
+        on_click=view_model.testar_conexao,
+    )
+
+
 def _campo_de_texto(
     view_model: FormularioViewModel,
     campo: NomeDoCampo,
     rotulo: str,
     icone: ft.IconData,
     *,
+    dica: str | None = None,
     secreto: bool = False,
+    so_numeros: bool = False,
+    acao: ft.Control | None = None,
     foco: bool = False,
 ) -> ft.TextField:
     """Desenha um campo de texto ligado a um campo do view model.
@@ -111,9 +144,12 @@ def _campo_de_texto(
     """
     return ft.TextField(
         label=rotulo,
+        hint_text=dica,
         value=view_model.digitado[campo],
         error=view_model.recusas.get(campo),
         prefix_icon=ft.Icon(icone, size=18, opacity=0.7),
+        suffix_icon=acao,
+        input_filter=ft.NumbersOnlyInputFilter() if so_numeros else None,
         password=secreto,
         can_reveal_password=secreto,
         autofocus=foco,
@@ -124,6 +160,48 @@ def _campo_de_texto(
         text_size=14,
         expand=True,
         on_change=lambda evento: view_model.digitar(campo, evento.control.value),
+    )
+
+
+def _campo_da_instancia(view_model: FormularioViewModel) -> ft.TextField:
+    """Desenha o campo que acha a instância no host, pelo nome ou pela porta.
+
+    Os dois dividem o mesmo lugar porque nunca valem juntos. A troca fica dentro
+    do campo, onde a Senha tem o olho: ela muda como o próprio campo funciona.
+    """
+    troca = _troca_de_nome_e_porta(usa_porta=view_model.usa_porta, ao_trocar=view_model.alternar_nome_e_porta)
+
+    if view_model.usa_porta:
+        return _campo_de_texto(view_model, "porta", "Porta", ft.Icons.NUMBERS, dica="1433", so_numeros=True, acao=troca)
+
+    return _campo_de_texto(view_model, "nome", "Instância", ft.Icons.STORAGE, dica="SQLEXPRESS", acao=troca)
+
+
+@ft.component
+def _troca_de_nome_e_porta(*, usa_porta: bool, ao_trocar: Callable[[], None]) -> ft.Control:
+    """Desenha o ícone que troca o campo da instância entre o nome e a porta.
+
+    Não é botão porque o hover do botão é maior que o campo. No lugar dele, o
+    ícone cresce e ganha cor com o mouse em cima, e por isso o componente guarda
+    em `posicao_do_mouse` onde o mouse está. É estado só da aparência: não é dado
+    do formulário, e por isso não vai para o view model.
+    """
+    posicao_do_mouse, marcar_posicao_do_mouse = ft.use_state("fora")
+    mouse_em_cima = posicao_do_mouse == "em_cima"
+
+    return ft.GestureDetector(
+        content=ft.Icon(
+            ft.Icons.SWAP_HORIZ,
+            size=18,
+            color=ft.Colors.PRIMARY if mouse_em_cima else None,
+            scale=1.2 if mouse_em_cima else 1,
+            animate_scale=ft.Animation(duration=150, curve=ft.AnimationCurve.EASE_OUT),
+        ),
+        tooltip="Usar o nome" if usa_porta else "Usar a porta",
+        mouse_cursor=ft.MouseCursor.CLICK,
+        on_enter=lambda _: marcar_posicao_do_mouse("em_cima"),
+        on_exit=lambda _: marcar_posicao_do_mouse("fora"),
+        on_tap=lambda _: ao_trocar(),
     )
 
 

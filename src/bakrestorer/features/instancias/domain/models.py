@@ -1,11 +1,16 @@
+from datetime import timedelta
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID, uuid4
 
 from pydantic import Field, model_validator
 
 from bakrestorer.base_model import BakRestorerModel
-from bakrestorer.features.instancias.domain.exceptions import CadastroInvalidoError, InstanciaInvalidaError
+from bakrestorer.features.instancias.domain.exceptions import (
+    CadastroInvalidoError,
+    DiagnosticoInvalidoError,
+    InstanciaInvalidaError,
+)
 
 
 class Instancia(BakRestorerModel):
@@ -16,12 +21,31 @@ class Instancia(BakRestorerModel):
     id: UUID = Field(default_factory=uuid4)
     apelido: str = Field(min_length=1)
     host: str = Field(default="localhost", min_length=1)
-    nome: str = Field(min_length=1)
+    nome: str | None = Field(default=None, min_length=1)
+    porta: int | None = Field(default=None, ge=1, le=65535)
     usuario: str = Field(min_length=1)
     # TODO: senha em texto puro -- tarefa #014
     senha: str = Field(min_length=1)
     pasta_dados: Path | None = None
     pasta_log: Path | None = None
+
+    @model_validator(mode="after")
+    def _conferir_nome_ou_porta(self) -> Self:
+        """Exige exatamente um entre o nome e a porta.
+
+        Raises:
+            InstanciaInvalidaError: Se os dois vieram preenchidos, ou nenhum.
+
+        """
+        if self.nome is not None and self.porta is not None:
+            motivo = "informe só um: o nome ou a porta"
+            raise InstanciaInvalidaError({"nome": motivo, "porta": motivo})
+
+        if self.nome is None and self.porta is None:
+            motivo = "informe o nome ou a porta"
+            raise InstanciaInvalidaError({"nome": motivo, "porta": motivo})
+
+        return self
 
 
 class ConfigInstancias(BakRestorerModel):
@@ -70,3 +94,63 @@ class ConfigInstancias(BakRestorerModel):
     def obter_pelo_apelido(self, apelido: str) -> Instancia | None:
         """Procura uma instância cadastrada pelo nome que o usuário vê."""
         return next((item for item in self.itens if item.apelido == apelido), None)
+
+
+type Situacao = Literal["ok", "aviso", "erro", "nao_verificado"]
+
+
+class Verificacao(BakRestorerModel):
+    """Um item do checklist do diagnóstico.
+
+    `detalhe` é o que o servidor ou a rede responderam, e vem vazio quando o
+    tempo de espera acaba sem resposta nenhuma.
+    """
+
+    ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
+
+    situacao: Situacao
+    detalhe: str = ""
+
+
+class Diagnostico(BakRestorerModel):
+    """O checklist de uma instância: cada verificação e como ela ficou.
+
+    A verificação que depende de outra que falhou fica não verificada: sem
+    resposta não há login, e sem login não há o que perguntar. `latencia` é o
+    tempo de ida e volta de um comando, e só existe quando o login passou.
+
+    As permissões de restaurar nascem não verificadas, porque só o diagnóstico
+    completo as confere. Elas são do login da conexão, e não de quem usa o
+    aplicativo.
+    """
+
+    ERRO_DE_VALIDACAO = DiagnosticoInvalidoError
+
+    id_da_instancia: UUID
+    conexao: Verificacao = Verificacao(situacao="nao_verificado")
+    login: Verificacao = Verificacao(situacao="nao_verificado")
+    criacao_de_banco: Verificacao = Verificacao(situacao="nao_verificado")
+    sobrescrita_de_banco: Verificacao = Verificacao(situacao="nao_verificado")
+    latencia: timedelta | None = None
+
+    @property
+    def situacao(self) -> Literal["ok", "aviso", "erro"]:
+        """Resume o checklist na pior situação que ele tem.
+
+        O não verificado não entra no resumo: ele só existe porque algo antes
+        dele falhou, e essa falha já deu o resumo.
+        """
+        situacoes = {
+            self.conexao.situacao,
+            self.login.situacao,
+            self.criacao_de_banco.situacao,
+            self.sobrescrita_de_banco.situacao,
+        }
+
+        if "erro" in situacoes:
+            return "erro"
+
+        if "aviso" in situacoes:
+            return "aviso"
+
+        return "ok"

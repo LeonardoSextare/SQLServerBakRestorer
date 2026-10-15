@@ -6,8 +6,11 @@ import pytest
 from bakrestorer.features.instancias import (
     CadastroInvalidoError,
     ConfigInstancias,
+    Diagnostico,
     Instancia,
     InstanciaInvalidaError,
+    Situacao,
+    Verificacao,
 )
 
 
@@ -30,7 +33,44 @@ class TestInstancia:
         criar_instancia: Callable[..., Instancia],
     ) -> None:
         with pytest.raises(InstanciaInvalidaError):
-            criar_instancia(porta=1433)
+            criar_instancia(servidor="localhost")
+
+    def test_dada_uma_porta_no_lugar_do_nome_quando_construir_entao_a_instancia_e_aceita(
+        self,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        instancia = criar_instancia(nome=None, porta=1433)
+
+        assert (instancia.nome, instancia.porta) == (None, 1433)
+
+    def test_dados_o_nome_e_a_porta_juntos_quando_construir_entao_a_instancia_e_recusada(
+        self,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        with pytest.raises(InstanciaInvalidaError) as recusa:
+            criar_instancia(nome="SQLEXPRESS", porta=1433)
+
+        assert {"nome", "porta"} <= recusa.value.campos.keys()
+
+    def test_dado_que_nem_o_nome_nem_a_porta_foram_informados_quando_construir_entao_a_instancia_e_recusada(
+        self,
+        criar_instancia: Callable[..., Instancia],
+    ) -> None:
+        with pytest.raises(InstanciaInvalidaError) as recusa:
+            criar_instancia(nome=None)
+
+        assert {"nome", "porta"} <= recusa.value.campos.keys()
+
+    @pytest.mark.parametrize("porta", [0, 65536])
+    def test_dada_uma_porta_fora_da_faixa_quando_construir_entao_a_instancia_e_recusada(
+        self,
+        criar_instancia: Callable[..., Instancia],
+        porta: int,
+    ) -> None:
+        with pytest.raises(InstanciaInvalidaError) as recusa:
+            criar_instancia(nome=None, porta=porta)
+
+        assert "porta" in recusa.value.campos
 
     def test_dado_que_o_host_nao_foi_informado_quando_construir_entao_ele_e_a_maquina_local(
         self,
@@ -165,3 +205,42 @@ class TestObterPeloApelido:
         criar_cadastro: Callable[..., ConfigInstancias],
     ) -> None:
         assert criar_cadastro().obter_pelo_apelido("HOMOLOG") is None
+
+
+class TestSituacao:
+    """Cobre `Diagnostico.situacao`."""
+
+    @pytest.mark.parametrize(
+        ("resposta", "login", "resumo"),
+        [
+            ("ok", "ok", "ok"),
+            ("ok", "aviso", "aviso"),
+            ("ok", "erro", "erro"),
+            ("erro", "nao_verificado", "erro"),
+        ],
+        ids=["tudo_ok", "um_aviso", "login_falhou", "sem_resposta"],
+    )
+    def test_dado_um_checklist_quando_resumir_entao_vale_a_pior_situacao(
+        self,
+        resposta: Situacao,
+        login: Situacao,
+        resumo: str,
+    ) -> None:
+        diagnostico = Diagnostico(
+            id_da_instancia=uuid4(),
+            conexao=Verificacao(situacao=resposta),
+            login=Verificacao(situacao=login),
+        )
+
+        assert diagnostico.situacao == resumo
+
+    def test_dada_so_a_sobrescrita_de_banco_com_aviso_quando_resumir_entao_o_resumo_e_aviso(self) -> None:
+        diagnostico = Diagnostico(
+            id_da_instancia=uuid4(),
+            conexao=Verificacao(situacao="ok"),
+            login=Verificacao(situacao="ok"),
+            criacao_de_banco=Verificacao(situacao="ok"),
+            sobrescrita_de_banco=Verificacao(situacao="aviso"),
+        )
+
+        assert diagnostico.situacao == "aviso"

@@ -37,11 +37,6 @@ def instancia_sql_server(request: pytest.FixtureRequest) -> Iterator[Conexao]:
 
 
 @pytest.fixture
-def cliente_sql_server() -> Iterator[ClienteSqlServer]:
-    """Cliente sob teste, encerrado ao fim para não deixar sessão aberta no contêiner."""
-    cliente = ClienteSqlServer()
-
-    try:
-        yield cliente
-    finally:
-        cliente.encerrar()
+def cliente_sql_server() -> ClienteSqlServer:
+    """Cliente do SQL Server. Não há nada a fechar no fim: cada operação fecha a própria conexão."""
+    return ClienteSqlServer()

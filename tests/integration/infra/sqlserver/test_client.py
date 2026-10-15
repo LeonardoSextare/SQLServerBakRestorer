@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from bakrestorer.infra.sqlserver import (
     ClienteSqlServer,
@@ -71,16 +73,16 @@ class TestExecutar:
 
         assert linhas == [{"comeca_com_pr": 1}]
 
-    def test_dada_a_mesma_conexao_quando_executar_duas_vezes_entao_o_estado_da_sessao_persiste(
+    def test_dada_a_mesma_conexao_quando_executar_duas_vezes_entao_cada_comando_tem_a_sua_sessao(
         self,
         cliente_sql_server: ClienteSqlServer,
         instancia_sql_server: Conexao,
     ) -> None:
         cliente_sql_server.executar(instancia_sql_server, CRIAR_MARCA_NA_SESSAO)
 
-        assert cliente_sql_server.executar(instancia_sql_server, PROCURAR_MARCA_NA_SESSAO) != [{"marca": None}]
+        assert cliente_sql_server.executar(instancia_sql_server, PROCURAR_MARCA_NA_SESSAO) == [{"marca": None}]
 
-    def test_dada_uma_sessao_aberta_quando_executar_um_comando_proibido_em_transacao_entao_ele_passa(
+    def test_dado_um_comando_proibido_em_transacao_quando_executar_entao_ele_passa(
         self,
         cliente_sql_server: ClienteSqlServer,
         instancia_sql_server: Conexao,
@@ -105,6 +107,19 @@ class TestExecutar:
 
         assert falha.value.servidor == instancia_sql_server.servidor
 
+    def test_dada_uma_senha_errada_quando_executar_entao_o_detalhe_e_so_a_mensagem_do_servidor(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with pytest.raises(CredenciaisInvalidasError) as falha:
+            cliente_sql_server.executar(
+                instancia_sql_server.model_copy(update={"senha": "errada"}),
+                "SELECT 1",
+            )
+
+        assert falha.value.detalhe == f"Login failed for user '{instancia_sql_server.usuario}'."
+
     def test_dado_um_host_que_nao_responde_quando_executar_entao_a_falha_e_de_instancia_inacessivel(self) -> None:
         cliente = ClienteSqlServer(login_timeout=1)
         inalcancavel = Conexao(host=HOST_INALCANCAVEL, porta=1433, usuario="sa", senha="segredo")
@@ -122,46 +137,73 @@ class TestExecutar:
         with pytest.raises(ComandoRecusadoError):
             cliente_sql_server.executar(instancia_sql_server, "SELECT * FROM tabela_que_nao_existe")
 
-    def test_dado_um_comando_recusado_quando_executar_de_novo_entao_a_sessao_continua_utilizavel(
+    def test_dado_um_comando_invalido_quando_executar_entao_o_detalhe_e_so_a_mensagem_do_servidor(
         self,
         cliente_sql_server: ClienteSqlServer,
         instancia_sql_server: Conexao,
     ) -> None:
-        with pytest.raises(ComandoRecusadoError):
+        with pytest.raises(ComandoRecusadoError) as falha:
             cliente_sql_server.executar(instancia_sql_server, "SELECT * FROM tabela_que_nao_existe")
 
-        assert cliente_sql_server.executar(instancia_sql_server, "SELECT 1 AS numero") == [{"numero": 1}]
+        assert falha.value.detalhe == "Invalid object name 'tabela_que_nao_existe'."
 
 
-class TestAquecer:
-    """Cobre `aquecer`."""
+class TestPing:
+    """Cobre `ping`."""
 
-    def test_dadas_conexoes_alcancavel_e_inalcancavel_quando_aquecer_entao_cada_uma_e_relatada(
-        self,
-        instancia_sql_server: Conexao,
-    ) -> None:
-        cliente = ClienteSqlServer(login_timeout=1)
-        inalcancavel = Conexao(host=HOST_INALCANCAVEL, porta=1433, usuario="sa", senha="segredo")
-
-        try:
-            assert cliente.aquecer([instancia_sql_server, inalcancavel]) == {
-                instancia_sql_server: True,
-                inalcancavel: False,
-            }
-        finally:
-            cliente.encerrar()
-
-
-class TestEncerrar:
-    """Cobre `encerrar`."""
-
-    def test_dada_uma_sessao_aberta_quando_encerrar_e_executar_de_novo_entao_o_estado_anterior_se_perdeu(
+    def test_dada_uma_instancia_que_responde_quando_fazer_o_ping_entao_a_latencia_volta(
         self,
         cliente_sql_server: ClienteSqlServer,
         instancia_sql_server: Conexao,
     ) -> None:
-        cliente_sql_server.executar(instancia_sql_server, CRIAR_MARCA_NA_SESSAO)
+        assert cliente_sql_server.ping(instancia_sql_server) >= timedelta(0)
 
-        cliente_sql_server.encerrar()
+    def test_dada_uma_senha_errada_quando_fazer_o_ping_entao_a_falha_e_de_credenciais(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with pytest.raises(CredenciaisInvalidasError):
+            cliente_sql_server.ping(instancia_sql_server.model_copy(update={"senha": "errada"}))
 
-        assert cliente_sql_server.executar(instancia_sql_server, PROCURAR_MARCA_NA_SESSAO) == [{"marca": None}]
+    def test_dado_um_host_que_nao_responde_quando_fazer_o_ping_entao_a_falha_e_de_instancia_inacessivel(self) -> None:
+        cliente = ClienteSqlServer(login_timeout=1)
+
+        with pytest.raises(InstanciaInacessivelError):
+            cliente.ping(Conexao(host=HOST_INALCANCAVEL, porta=1433, usuario="sa", senha="segredo"))
+
+
+class TestSessao:
+    """Cobre `sessao`."""
+
+    def test_dada_uma_sessao_quando_executar_dois_comandos_entao_o_estado_persiste_entre_eles(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with cliente_sql_server.sessao(instancia_sql_server) as sessao:
+            sessao.executar(CRIAR_MARCA_NA_SESSAO)
+
+            assert sessao.executar(PROCURAR_MARCA_NA_SESSAO) != [{"marca": None}]
+
+    def test_dada_uma_sessao_com_um_comando_recusado_quando_executar_de_novo_entao_ela_continua_utilizavel(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with cliente_sql_server.sessao(instancia_sql_server) as sessao:
+            with pytest.raises(ComandoRecusadoError):
+                sessao.executar("SELECT * FROM tabela_que_nao_existe")
+
+            assert sessao.executar("SELECT 1 AS numero") == [{"numero": 1}]
+
+    def test_dada_uma_senha_errada_quando_abrir_a_sessao_entao_a_falha_e_de_credenciais(
+        self,
+        cliente_sql_server: ClienteSqlServer,
+        instancia_sql_server: Conexao,
+    ) -> None:
+        with (
+            pytest.raises(CredenciaisInvalidasError),
+            cliente_sql_server.sessao(instancia_sql_server.model_copy(update={"senha": "errada"})),
+        ):
+            pass
